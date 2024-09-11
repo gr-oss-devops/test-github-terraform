@@ -41,10 +41,10 @@ jobs:
           TF_VAR_github_token: ${{ secrets.TF_GITHUB_TOKEN }}
           TF_VAR_github_owner: ${{ github.repository_owner }}
 
-#      - name: Terraform Apply
-#        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-#        run: terraform apply -auto-approve
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          TF_VAR_github_token: ${{ secrets.TF_GITHUB_TOKEN }}
-#          TF_VAR_github_owner: ${{ github.repository_owner }}
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TF_VAR_github_token: ${{ secrets.TF_GITHUB_TOKEN }}
+          TF_VAR_github_owner: ${{ github.repository_owner }}
