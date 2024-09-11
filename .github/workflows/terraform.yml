@@ -23,12 +23,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: actions/cache@v4
+      - name: Cache Terraform state
+        uses: actions/cache@v3
         with:
-          path: |
-            terraform.tfstate
-            .terraform
-          key: ${{ hashFiles('terraform.tfstate', '.terraform.lock.hcl') }}
+          path: terraform.tfstate
+          key: terraform-state-${{ runner.os }}-${{ hashFiles('terraform.tfstate') }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
