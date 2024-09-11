@@ -16,25 +16,25 @@ locals {
   repo_configs = fileset(path.module, "repo_configs/*.{yml,yaml}")
   repos = {
     for file in local.repo_configs :
-    trimsuffix(basename(file), replace(basename(file), "^(.*?)(\\.ya?ml)?$", "$2")) => yamldecode(file(file))
+    lower(replace(trimsuffix(basename(file), replace(basename(file), "^(.*?)(\\.ya?ml)?$", "$2")), "/[^a-zA-Z0-9-_]/", "-")) => yamldecode(file(file))
   }
 }
 
 resource "github_repository" "repos" {
   for_each = local.repos
 
-  name        = each.key
-  description = each.value.description
-  visibility  = each.value.visibility
+  name        = substr(each.key, 0, 100)  # GitHub has a 100 character limit on repo names
+  description = try(each.value.description, null)
+  visibility  = try(each.value.visibility, "private")
 
-  auto_init = true
+  auto_init = try(each.value.auto_init, true)
 
-  topics = each.value.topics
+  topics = try(each.value.topics, null)
 
-  has_issues    = each.value.has_issues
-  has_projects  = each.value.has_projects
-  has_wiki      = each.value.has_wiki
-  has_downloads = each.value.has_downloads
+  has_issues    = try(each.value.has_issues, true)
+  has_projects  = try(each.value.has_projects, true)
+  has_wiki      = try(each.value.has_wiki, true)
+  has_downloads = try(each.value.has_downloads, true)
 }
 
 resource "github_branch_protection" "main" {
