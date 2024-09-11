@@ -35,9 +35,9 @@ resource "github_repository" "repos" {
 
   name        = each.key
   description = try(each.value.description, null)
-  visibility  = try(each.value.visibility, "private")  # Default visibility is private
+  visibility  = try(each.value.visibility, "private") # Default visibility is private
 
-  auto_init = try(each.value.auto_init, true)  # Default auto_init is true
+  auto_init = try(each.value.auto_init, true) # Default auto_init is true
 
   topics = try(each.value.topics, null)
 
