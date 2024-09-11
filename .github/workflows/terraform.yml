@@ -18,15 +18,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: terraform-state
-          path: terraform.tfstate
-
       - name: Cache Terraform state
         uses: actions/cache@v3
         with:
-          path: .terraform
+          path: |
+            .terraform
+            terraform.tfstate
           key: terraform-state-${{ runner.os }}-${{ hashFiles('.terraform.lock.hcl') }}
 
       - name: Setup Terraform
@@ -54,9 +51,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TF_VAR_github_token: ${{ secrets.PAT }}
           TF_VAR_github_owner: ${{ github.repository_owner }}
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: terraform-state
-          path: terraform.tfstate
-          overwrite: true
