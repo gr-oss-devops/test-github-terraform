@@ -22,7 +22,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: terraform.tfstate
-          key: terraform-state-${{ runner.os }}-${{ hashFiles('terraform.tfstate') }}
+          key: terraform-state-${{ runner.os }}-${{ hashFiles('.terraform.lock.hcl') }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
