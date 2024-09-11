@@ -1,0 +1,10 @@
+description: "Repository 1 created with Terraform"
+visibility: "private"
+topics:
+  - terraform
+  - github
+  - example
+has_issues: true
+has_projects: true
+has_wiki: true
+has_downloads: true
