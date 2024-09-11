@@ -16,7 +16,7 @@ locals {
   repo_configs = fileset(path.module, "repo_configs/*.{yml,yaml}")
   repos = {
     for file in local.repo_configs :
-    trimsuffix(basename(file), lookup(regexall("\\.(yaml|yml)$", file)[0], 0, ".yml")) => yamldecode(file(file))
+    trimsuffix(basename(file), length(regexall("\\.(yaml|yml)$", file)) > 0 ? regexall("\\.(yaml|yml)$", file)[0] : ".yml") => yamldecode(file(file))
   }
 }
 
