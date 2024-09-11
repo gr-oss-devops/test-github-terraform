@@ -28,7 +28,7 @@ jobs:
           path: |
             terraform.tfstate
             .terraform
-          key: ${{ hashFiles('terraform.tfstate, .terraform.lock.hcl') }}
+          key: ${{ hashFiles('terraform.tfstate', '.terraform.lock.hcl') }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
