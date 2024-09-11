@@ -1,6 +1,5 @@
 output "files" {
   value = {
-    for file in local.repo_configs :
-    file => file
+    for k, v in data.local_file.repo_file : k => v.content
   }
 }

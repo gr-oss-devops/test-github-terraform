@@ -15,3 +15,8 @@ provider "github" {
 locals {
   repo_configs = fileset(path.module, "repo_configs/*.{yml,yaml}")
 }
+
+data "local_file" "repo_file" {
+  for_each = local.repo_configs
+  filename = each.key
+}
