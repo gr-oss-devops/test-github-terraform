@@ -1,0 +1,8 @@
+description: "Repository 2 created with Terraform"
+visibility: "private"
+topics:
+  - demo
+has_issues: true
+has_projects: true
+has_wiki: true
+has_downloads: true
