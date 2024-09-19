@@ -27,4 +27,8 @@ module "github_repos" {
   repo_has_projects   = try(each.value.has_projects, true)
   repo_has_wiki       = try(each.value.has_wiki, true)
   repo_has_downloads  = try(each.value.has_downloads, true)
+
+  providers = {
+    github = "github"
+  }
 }
