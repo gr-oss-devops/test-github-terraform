@@ -36,3 +36,6 @@ override.tf.json
 .terraformrc
 terraform.rc
 .idea
+
+feature/github-repo-provisioning/.terraform
+feature/github-repo-provisioning/.terraform/*
