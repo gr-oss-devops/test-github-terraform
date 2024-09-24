@@ -7,10 +7,7 @@
 #  }
 #}
 
-#provider "github" {
-#  token = var.github_token
-#  owner = var.github_owner
-#}
+provider "github" {}
 
 locals {
   repo_configs = fileset(path.module, "repo_configs/*.{yml,yaml}")
