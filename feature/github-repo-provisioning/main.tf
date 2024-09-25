@@ -1,12 +1,3 @@
-#terraform {
-#  required_providers {
-#    github = {
-#      source  = "integrations/github"
-#      version = "~> 5.0"
-#    }
-#  }
-#}
-
 provider "github" {}
 
 locals {
@@ -25,24 +16,21 @@ locals {
   }
 }
 
-#module "github_repos" {
-#  source              = "../../modules/github-repo"
-#  for_each            = local.repos
-#
-#  repo_name           = each.key
-#  repo_description    = try(each.value.description, null)
-#  repo_visibility     = try(each.value.visibility, "private")
-#  repo_auto_init      = try(each.value.auto_init, true)
-#  repo_topics         = try(each.value.topics, [])
-#  repo_has_issues     = try(each.value.has_issues, true)
-#  repo_has_projects   = try(each.value.has_projects, true)
-#  repo_has_wiki       = try(each.value.has_wiki, true)
-#  repo_has_downloads  = try(each.value.has_downloads, true)
-#}
-
 module "repository" {
-  source    = "mineiros-io/repository/github"
-  version   = "~> 0.18.0"
-  for_each  = local.repos
-  name      = each.key
+  source                  = "mineiros-io/repository/github"
+  version                 = "~> 0.18.0"
+  for_each                = local.repos
+
+  name                    = each.key
+  description             = try(each.value.description, null)
+  visibility              = try(each.value.visibility, "private")
+  auto_init               = try(each.value.auto_init, true)
+  topics                  = try(each.value.topics, [])
+  has_issues              = try(each.value.has_issues, true)
+  has_projects            = try(each.value.has_projects, true)
+  has_wiki                = try(each.value.has_wiki, true)
+  has_downloads           = try(each.value.has_downloads, true)
+
+  archive_on_destroy      = false
+  issue_labels_create     = false
 }
