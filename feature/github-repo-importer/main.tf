@@ -3,7 +3,7 @@ provider "github" {}
 module "repository" {
   source    = "mineiros-io/repository/github"
   version   = "~> 0.18.0"
-  name      = var.repo_name
+  name      = "unknown"
 
   allow_rebase_merge      = true
   allow_squash_merge      = true
