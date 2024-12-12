@@ -33,4 +33,6 @@ module "repository" {
 
   archive_on_destroy      = false
   issue_labels_create     = false
+
+  default_branch          = try(each.value.default_branch, null)
 }

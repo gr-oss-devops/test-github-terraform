@@ -16,11 +16,16 @@ extract:
       has_wiki: .values.has_wiki,
       has_downloads: .values.has_downloads
     }')
-  echo "$repoConfig" | jq -r '.' > $repoName.yml
+  echo "$repoConfig" | jq -r '.' | yq -P > $repoName.yml
+  defaultBranch=$(terraform show -json | jq -c '.values.root_module.child_modules[].resources[] | select(.type == "github_branch_default")')
+  defaultBranchName=$(echo "$defaultBranch" | jq -r '.values.branch')
+  echo "default_branch: $defaultBranchName" >> $repoName.yml
   mv $repoName.yml ../../feature/github-repo-provisioning/repo_configs/
 
 import-repo repoName:
   terraform import module.repository.github_repository.repository {{repoName}}
+  terraform import 'module.repository.github_branch_default.default[0]' {{repoName}}
 
 remove-imported-repo:
   terraform state rm module.repository.github_repository.repository
+  terraform state rm 'module.repository.github_branch_default.default[0]'
