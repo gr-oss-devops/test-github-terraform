@@ -6,7 +6,7 @@ topics:
   - java
 has_issues: true
 has_projects: true
-has_wiki: true
+has_wiki: false
 has_downloads: true
 archive_on_destroy: null
 homepage_url: ""
