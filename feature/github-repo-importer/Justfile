@@ -16,7 +16,6 @@ extract:
       has_wiki: .values.has_wiki,
       has_downloads: .values.has_downloads,
       archive_on_destroy: .values.archive_on_destroy,
-      issue_labels_create: .values.issue_labels_create,
       homepage_url: .values.homepage_url,
       allow_merge_commit: .values.allow_merge_commit,
       allow_rebase_merge: .values.allow_rebase_merge,
