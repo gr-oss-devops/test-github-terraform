@@ -18,4 +18,4 @@ delete_branch_on_merge: false
 is_template: false
 archived: false
 vulnerability_alerts: false
-default_branch: main
+default_branch: dummy-main
