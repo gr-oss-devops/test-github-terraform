@@ -38,7 +38,7 @@ module "repository" {
   has_downloads           = try(each.value.has_downloads, true)
 
   archive_on_destroy      = try(each.value.archive_on_destroy, false)
-  issue_labels_create     = try(each.value.issue_labels_create, null)
+  issue_labels_create     = try(each.value.issue_labels_create, false)
 
   homepage_url            = try(each.value.homepage_url, null)
   allow_merge_commit      = try(each.value.allow_merge_commit, null)
@@ -51,7 +51,4 @@ module "repository" {
   vulnerability_alerts    = try(each.value.vulnerability_alerts, null)
 
   default_branch          = try(each.value.default_branch, null)
-
-#  Do not remove or change
-  issue_labels_create     = false
 }
