@@ -22,6 +22,12 @@ import {
   id = each.key
 }
 
+import {
+  for_each = local.repos
+  to = module.repository[each.key].github_branch_default.default[0]
+  id = format("%s-%s", each.key, each.value.default_branch)
+}
+
 module "repository" {
   source                  = "mineiros-io/repository/github"
   version                 = "~> 0.18.0"
