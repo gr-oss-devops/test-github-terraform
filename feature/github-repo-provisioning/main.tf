@@ -16,6 +16,12 @@ locals {
   }
 }
 
+import {
+  for_each = local.repos
+  to = module.repository[each.key]
+  id = each.value
+}
+
 module "repository" {
   source                  = "mineiros-io/repository/github"
   version                 = "~> 0.18.0"
