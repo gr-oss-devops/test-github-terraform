@@ -37,7 +37,7 @@ module "repository" {
   has_wiki                = try(each.value.has_wiki, true)
   has_downloads           = try(each.value.has_downloads, true)
 
-  archive_on_destroy      = try(each.value.archive_on_destroy, true)
+  archive_on_destroy      = try(each.value.archive_on_destroy, false)
   issue_labels_create     = try(each.value.issue_labels_create, null)
 
   homepage_url            = try(each.value.homepage_url, null)
