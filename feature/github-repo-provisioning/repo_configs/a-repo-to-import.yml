@@ -8,4 +8,15 @@ has_issues: true
 has_projects: true
 has_wiki: true
 has_downloads: true
+archive_on_destroy: null
+issue_labels_create: null
+homepage_url: ""
+allow_merge_commit: true
+allow_rebase_merge: true
+allow_squash_merge: true
+allow_auto_merge: false
+delete_branch_on_merge: false
+is_template: false
+archived: false
+vulnerability_alerts: false
 default_branch: main
