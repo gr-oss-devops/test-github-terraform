@@ -16,6 +16,18 @@ locals {
   }
 }
 
+import {
+  for_each = local.repos
+  to = module.repository[each.key].github_repository.repository
+  id = each.key
+}
+
+import {
+  for_each = local.repos
+  to = module.repository[each.key].github_branch_default.default[0]
+  id = each.key
+}
+
 module "repository" {
   source                  = "mineiros-io/repository/github"
   version                 = "~> 0.18.0"
@@ -31,8 +43,18 @@ module "repository" {
   has_wiki                = try(each.value.has_wiki, true)
   has_downloads           = try(each.value.has_downloads, true)
 
-  archive_on_destroy      = false
+  archive_on_destroy      = try(each.value.archive_on_destroy, false)
   issue_labels_create     = false
+
+  homepage_url            = try(each.value.homepage_url, null)
+  allow_merge_commit      = try(each.value.allow_merge_commit, null)
+  allow_rebase_merge      = try(each.value.allow_rebase_merge, null)
+  allow_squash_merge      = try(each.value.allow_squash_merge, null)
+  allow_auto_merge        = try(each.value.allow_auto_merge, null)
+  delete_branch_on_merge  = try(each.value.delete_branch_on_merge, null)
+  is_template             = try(each.value.is_template, null)
+  archived                = try(each.value.archived, false)
+  vulnerability_alerts    = try(each.value.vulnerability_alerts, null)
 
   default_branch          = try(each.value.default_branch, null)
 }
