@@ -25,7 +25,7 @@ import {
 import {
   for_each = local.repos
   to = module.repository[each.key].github_branch_default.default[0]
-  id = format("%s-%s", each.key, "default-branch")
+  id = each.key
 }
 
 module "repository" {
