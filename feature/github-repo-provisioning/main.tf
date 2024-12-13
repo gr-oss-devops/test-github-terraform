@@ -51,4 +51,7 @@ module "repository" {
   vulnerability_alerts    = try(each.value.vulnerability_alerts, null)
 
   default_branch          = try(each.value.default_branch, null)
+
+#  Do not remove or change
+  issue_labels_create     = false
 }
