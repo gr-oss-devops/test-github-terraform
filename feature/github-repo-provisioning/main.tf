@@ -19,7 +19,7 @@ locals {
 import {
   for_each = local.repos
   to = module.repository.github_repository.repository[each.key]
-  id = each.value
+  id = each.key
 }
 
 module "repository" {
