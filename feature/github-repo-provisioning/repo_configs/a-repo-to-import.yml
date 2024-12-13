@@ -1,4 +1,4 @@
-description: ""
+description: "A dummy repo to test imports via terraform"
 visibility: private
 topics:
   - dotnet
