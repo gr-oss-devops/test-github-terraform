@@ -296,12 +296,15 @@ func convertConditions(ghConditions *github.RulesetConditions) *Conditions {
 }
 
 func convertBypassActors(ghActors []*github.BypassActor) []BypassActor {
-	result := make([]BypassActor, len(ghActors))
-	for i, actor := range ghActors {
-		result[i] = BypassActor{
-			ActorID:    int(actor.GetActorID()),
-			ActorType:  actor.GetActorType(),
-			BypassMode: actor.BypassMode,
+	//result := make([]BypassActor, len(ghActors))
+	var result []BypassActor
+	for _, actor := range ghActors {
+		if actor.GetActorType() != "DeployKey" {
+			result = append(result, BypassActor{
+				ActorID:    int(actor.GetActorID()),
+				ActorType:  actor.GetActorType(),
+				BypassMode: actor.BypassMode,
+			})
 		}
 	}
 	return result
