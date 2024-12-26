@@ -49,7 +49,7 @@ type RequiredDeployments struct {
 }
 
 type RequiredStatusChecks struct {
-	RequiredCheck                    []RequiredCheck `yaml:"required_check,omitempty" json:"required_status_checks"`
+	RequiredCheck                    []RequiredCheck `yaml:"required_check" json:"required_status_checks"`
 	StrictRequiredStatusChecksPolicy *bool           `yaml:"strict_required_status_checks_policy,omitempty" json:"strict_required_status_checks_policy"`
 }
 

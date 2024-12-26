@@ -1,4 +1,5 @@
 visibility: public
+homepage_url: ""
 default_branch: master
 has_issues: true
 has_projects: true
@@ -32,6 +33,7 @@ rulesets:
         required_linear_history: true
         required_signatures: true
         required_status_checks:
+            required_check: []
             strict_required_status_checks_policy: true
         required_code_scanning:
             required_code_scanning_tool:
@@ -56,11 +58,9 @@ rulesets:
         - actor_id: 1
           actor_type: OrganizationAdmin
           bypass_mode: pull_request
-        - actor_type: DeployKey
-          bypass_mode: always
       conditions:
         ref_name:
             include:
                 - ~DEFAULT_BRANCH
       repository: gr-oss-devops/test-template
-vulnerability_alerts_enabled: true
+vulnerability_alerts_enabled: false
