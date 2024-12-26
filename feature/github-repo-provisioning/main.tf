@@ -293,11 +293,11 @@ resource "github_repository_ruleset" "ruleset" {
       for_each = try(each.value.ruleset.rules.pull_request, null) != null ? [each.value.ruleset.rules.pull_request] : []
 
       content {
-        dismiss_stale_reviews_on_push     = try(each.value.ruleset.rules.pull_request.dismiss_stale_reviews, null)
+        dismiss_stale_reviews_on_push     = try(each.value.ruleset.rules.pull_request.dismiss_stale_reviews_on_push, null)
         require_code_owner_review         = try(each.value.ruleset.rules.pull_request.require_code_owner_review, null)
         require_last_push_approval        = try(each.value.ruleset.rules.pull_request.require_last_push_approval, null)
-        required_approving_review_count   = try(each.value.ruleset.rules.pull_request.required_reviews, null)
-        required_review_thread_resolution = try(each.value.ruleset.rules.pull_request.required_thread_resolution, null)
+        required_approving_review_count   = try(each.value.ruleset.rules.pull_request.required_approving_review_count, null)
+        required_review_thread_resolution = try(each.value.ruleset.rules.pull_request.required_review_thread_resolution, null)
       }
     }
 
