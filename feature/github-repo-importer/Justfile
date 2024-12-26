@@ -1,40 +1,10 @@
 # Justfile for Terraform to YAML conversion using yq
 
-extract:
-  #!/usr/bin/env bash
-  set -euxo pipefail
-  echo "Extracting Terraform state to YAML..."
-  importedRepo=$(terraform show -json | jq -c '.values.root_module.child_modules[].resources[] | select(.type == "github_repository")')
-  repoName=$(echo "$importedRepo" | jq -r '.values.name')
-  repoConfig=$(echo "$importedRepo" | jq '
-    {
-      description: .values.description,
-      visibility: .values.visibility,
-      topics: .values.topics,
-      has_issues: .values.has_issues,
-      has_projects: .values.has_projects,
-      has_wiki: .values.has_wiki,
-      has_downloads: .values.has_downloads,
-      archive_on_destroy: .values.archive_on_destroy,
-      homepage_url: .values.homepage_url,
-      allow_merge_commit: .values.allow_merge_commit,
-      allow_rebase_merge: .values.allow_rebase_merge,
-      allow_squash_merge: .values.allow_squash_merge,
-      allow_auto_merge: .values.allow_auto_merge,
-      delete_branch_on_merge: .values.delete_branch_on_merge,
-      is_template: .values.is_template,
-      archived: .values.archived,
-      vulnerability_alerts: .values.vulnerability_alerts
-    }')
-  echo "$repoConfig" | jq -r '.' | yq -P > $repoName.yml
-  defaultBranch=$(terraform show -json | jq -c '.values.root_module.child_modules[].resources[] | select(.type == "github_branch_default")')
-  defaultBranchName=$(echo "$defaultBranch" | jq -r '.values.branch')
-  echo "default_branch: $defaultBranchName" >> $repoName.yml
-  mv $repoName.yml ../../feature/github-repo-provisioning/repo_configs/
-
 import-repo repoName:
-  terraform import module.repository.github_repository.repository {{repoName}}
-  terraform import 'module.repository.github_branch_default.default[0]' {{repoName}}
+  #!/usr/bin/env bash
+  ./importer --import {{repoName}}
+  IFS='/' read -r owner repo <<< {{repoName}}
+  mv "$repo.yaml" "../../feature/github-repo-provisioning/repo_configs/generated/"
 
 remove-imported-repo:
   terraform state rm module.repository.github_repository.repository
