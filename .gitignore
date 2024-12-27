@@ -44,3 +44,4 @@ feature/github-repo-provisioning/.terraform/*
 feature/github-repo-importer/.terraform.lock.hcl
 feature/github-repo-importer/.terraform
 feature/github-repo-importer/.terraform/*
+feature/github-repo-importer/importer
