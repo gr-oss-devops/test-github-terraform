@@ -226,10 +226,6 @@ import {
   id = "${each.value.repository}:${each.value.ruleset.id}"
 }
 
-output "rulesets_map" {
-  value = local.all_rulesets_map
-}
-
 resource "github_repository_ruleset" "ruleset" {
   for_each  = local.all_rulesets_map
   name      = each.value.ruleset.name
