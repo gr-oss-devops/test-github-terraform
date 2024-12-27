@@ -16,6 +16,9 @@ topics:
     - dotnet
     - go
     - java
+pages:
+    branch: main
+    path: /
 rulesets:
     - id: 3022700
       enforcement: active

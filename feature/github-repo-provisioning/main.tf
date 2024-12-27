@@ -60,11 +60,11 @@ module "repository" {
   archived                = try(each.value.archived,                false)
   topics                  = try(each.value.topics,                  [])
   archive_on_destroy      = false
-#  pages                   = try({
-#                              branch = try(each.value.pages.branch, "gh-pages")
-#                              path   = try(each.value.pages.path,   "/")
-#                              cname  = try(each.value.pages.cname,  null)
-#                            })
+  pages                   = try(contains(keys(each.value), "pages") && try(each.value.pages != null, false) ? {
+                              branch = try(each.value.pages.branch, "gh-pages")
+                              path   = try(each.value.pages.path,   "/")
+                              cname  = try(each.value.pages.cname,  null)
+                            } : null)
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Extended Resource Configuration
@@ -74,10 +74,10 @@ module "repository" {
   auto_init           = try(each.value.auto_init,                           true)
   gitignore_template  = try(each.value.gitignore_template,                  "")
   license_template    = try(each.value.license_template,                    "")
-#  template            = try({
-#                          owner       = try(each.value.template.owner,      "")
-#                          repository  = try(each.value.template.repository, "")
-#                        })
+  template            = try(contains(keys(each.value), "template") && try(each.value.template != null, false) ? {
+                          owner       = try(each.value.template.owner,      "")
+                          repository  = try(each.value.template.repository, "")
+                        } : null)
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Teams Configuration
