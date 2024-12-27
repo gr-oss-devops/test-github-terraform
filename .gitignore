@@ -45,3 +45,4 @@ feature/github-repo-importer/.terraform.lock.hcl
 feature/github-repo-importer/.terraform
 feature/github-repo-importer/.terraform/*
 feature/github-repo-importer/importer
+feature/github-repo-importer/dumps/*

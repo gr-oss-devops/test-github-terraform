@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 
@@ -16,6 +17,8 @@ func main() {
 	var extractRepo string
 	var configFile string
 
+	file.CreateDumpsDirectory()
+
 	// Root command
 	var rootCmd = &cobra.Command{
 		Use:   "importer",
@@ -24,6 +27,7 @@ func main() {
 			// Handle flags separately to decouple the logic
 			if importRepo != "" {
 				fmt.Printf("Importing repository: %s\n", importRepo)
+				file.CreateRepositoryDirectory(importRepo)
 				if repo, err := github.ImportRepo(importRepo); err != nil {
 					return fmt.Errorf("failed to import repo: %w", err)
 				} else {
@@ -59,9 +63,12 @@ func main() {
 }
 
 func HandleRepository(repository *github.Repository) {
-	fmt.Printf("Repository details: %+v\n", repository)
-	// Write the repository to a YAML file
-	err := file.WriteRepositoryToYAML(repository)
+	data, err := yaml.Marshal(repository)
+	if err != nil {
+		fmt.Printf("Failed to marshal repository to YAML: %w", err)
+	}
+
+	err = file.WriteRepositoryToYAML(data, repository.Name)
 	if err != nil {
 		log.Fatalf("Failed to write repository to YAML: %v", err)
 	}

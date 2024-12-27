@@ -29,12 +29,8 @@ rulesets:
             require_last_push_approval: true
             required_approving_review_count: 0
             required_review_thread_resolution: true
-        required_deployments: {}
         required_linear_history: true
         required_signatures: true
-        required_status_checks:
-            required_check: []
-            strict_required_status_checks_policy: true
         required_code_scanning:
             required_code_scanning_tool:
                 - alerts_threshold: errors

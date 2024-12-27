@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gr-oss-devops/github-repo-importer/pkg/file"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/google/go-github/v67/github"
@@ -38,7 +40,6 @@ func createGitHubClient() (*github.Client, error) {
 	return client, nil
 }
 
-// ImportRepo fetches details of the given repository.
 func ImportRepo(repoName string) (*Repository, error) {
 	if !isValidRepoFormat(repoName) {
 		return nil, errors.New("invalid repository format. Use owner/repo")
@@ -54,6 +55,7 @@ func ImportRepo(repoName string) (*Repository, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch repo: %w (API Response: %s)", err, r.Status)
 	}
+	file.DumpResponse("repository", repoName, repo)
 
 	categorizedCollaborators, err := CategorizeCollaborators(client, repoNameSplit[0], repoNameSplit[1])
 	if err != nil {
@@ -71,6 +73,7 @@ func ImportRepo(repoName string) (*Repository, error) {
 	} else if 404 != r.StatusCode {
 		fmt.Printf("No pages found for this repo: %s\n", repoName)
 	}
+	file.DumpResponse("pages", repoName, pages)
 
 	rulesets, r, err := client.Repositories.GetAllRulesets(context.Background(), repoNameSplit[0], repoNameSplit[1], false)
 	if 404 != r.StatusCode && err != nil {
@@ -82,9 +85,8 @@ func ImportRepo(repoName string) (*Repository, error) {
 	var collectedRulesets []github.Ruleset
 	for _, ruleset := range rulesets {
 		rulesetById, _, _ := client.Repositories.GetRuleset(context.Background(), repoNameSplit[0], repoNameSplit[1], ruleset.GetID(), false)
-		jsonData, _ := json.Marshal(rulesetById)
 		collectedRulesets = append(collectedRulesets, *rulesetById)
-		fmt.Println(string(jsonData))
+		file.DumpResponse("ruleset"+strconv.FormatInt(rulesetById.GetID(), 10), repoName, rulesetById)
 	}
 
 	vulnerabilityAlertsEnabled, r, err := client.Repositories.GetVulnerabilityAlerts(context.Background(), repoNameSplit[0], repoNameSplit[1])
@@ -349,7 +351,6 @@ func CategorizeCollaborators(client *github.Client, owner, repo string) (map[str
 	maintainCollaborators := []string{}
 	adminCollaborators := []string{}
 
-	// List collaborators from the repository
 	opts := &github.ListCollaboratorsOptions{
 		ListOptions: github.ListOptions{PerPage: 100},
 	}
@@ -363,7 +364,6 @@ func CategorizeCollaborators(client *github.Client, owner, repo string) (map[str
 			return nil, nil
 		}
 
-		// Iterate over collaborators
 		for _, collaborator := range collaborators {
 			permissions := collaborator.GetPermissions()
 
@@ -384,16 +384,13 @@ func CategorizeCollaborators(client *github.Client, owner, repo string) (map[str
 			}
 		}
 
-		// Break out of the loop if there are no more pages
 		if resp.NextPage == 0 {
 			break
 		}
 
-		// Set the next page
 		opts.Page = resp.NextPage
 	}
 
-	// Return the categorized collaborators as a map
 	return map[string][]string{
 		PermissionPull:     pullCollaborators,
 		PermissionTriage:   triageCollaborators,
@@ -421,7 +418,6 @@ func CategorizeTeams(client *github.Client, owner, repo string) (map[string][]in
 			return nil, nil
 		}
 
-		// Iterate over collaborators
 		for _, team := range teams {
 			permissions := team.GetPermissions()
 
@@ -442,16 +438,13 @@ func CategorizeTeams(client *github.Client, owner, repo string) (map[string][]in
 			}
 		}
 
-		// Break out of the loop if there are no more pages
 		if resp.NextPage == 0 {
 			break
 		}
 
-		// Set the next page
 		opts.Page = resp.NextPage
 	}
 
-	// Return the categorized collaborators as a map
 	return map[string][]int64{
 		PermissionPull:     pullTeams,
 		PermissionTriage:   triageTeams,

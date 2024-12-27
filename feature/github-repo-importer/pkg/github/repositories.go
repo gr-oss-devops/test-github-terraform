@@ -47,21 +47,3 @@ type Pages struct {
 	Branch *string `yaml:"branch,omitempty"`
 	Path   *string `yaml:"path,omitempty"`
 }
-
-//type PullRequestParameters struct {
-//	DismissStaleReviewsOnPush      *bool `json:"dismiss_stale_reviews_on_push"`
-//	RequireCodeOwnerReview         *bool `json:"require_code_owner_review"`
-//	RequireLastPushApproval        *bool `json:"require_last_push_approval"`
-//	RequiredApprovingReviewCount   *int  `json:"required_approving_review_count"`
-//	RequiredReviewThreadResolution *bool `json:"required_review_thread_resolution"`
-//}
-//
-//type RequiredStatusChecksParameters struct {
-//	Strict       *bool         `json:"strict_required_status_checks_policy,omitempty"`
-//	StatusChecks []StatusCheck `json:"required_status_checks,omitempty"`
-//}
-//
-//type StatusCheck struct {
-//	Context       *string `json:"context"`
-//	IntegrationId *int64  `json:"integration_id"`
-//}
