@@ -57,8 +57,6 @@ branch_protections_v4:
       enforce_admins: false
       push_restrictions:
         - 14854905
-        - 9813470
-        - 1086805
       require_conversation_resolution: true
       require_signed_commits: false
       required_linear_history: false
