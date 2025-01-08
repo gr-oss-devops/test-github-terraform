@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gr-oss-devops/github-repo-importer/pkg/file"
+	"net/url"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -164,31 +165,54 @@ func resolveBranchProtectionsV4(branchProtectionRule *github.Protection, branch 
 	return rules
 }
 
-func resolvePushRestrictions(restrictions *github.BranchRestrictions) []*int64 {
+func resolvePushRestrictions(restrictions *github.BranchRestrictions) []string {
 	if restrictions == nil {
 		return nil
 	}
 
-	var pushRestrictions []*int64
+	var pushRestrictions []string
 	for _, user := range restrictions.Users {
 		if user.ID != nil {
-			pushRestrictions = append(pushRestrictions, user.ID)
+			username := fmt.Sprintf("/%s", user.GetLogin())
+			pushRestrictions = append(pushRestrictions, username)
 		}
 	}
 
 	for _, team := range restrictions.Teams {
 		if team.ID != nil {
-			pushRestrictions = append(pushRestrictions, team.ID)
+			orgname, err := extractOrganizationName(team.GetHTMLURL())
+			if err != nil {
+				fmt.Printf("failed to extract organization name: %v\n", err)
+			}
+
+			teamname := fmt.Sprintf("%s/%s", orgname, team.GetName())
+			pushRestrictions = append(pushRestrictions, teamname)
 		}
 	}
 
 	for _, app := range restrictions.Apps {
 		if app.ID != nil {
-			pushRestrictions = append(pushRestrictions, app.ID)
+			appname := fmt.Sprintf("/%s", app.GetSlug())
+			pushRestrictions = append(pushRestrictions, appname)
 		}
 	}
 
 	return pushRestrictions
+}
+
+func extractOrganizationName(githubURL string) (string, error) {
+	parsedURL, err := url.Parse(githubURL)
+	if err != nil {
+		return "", fmt.Errorf("invalid URL: %w", err)
+	}
+
+	pathSegments := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
+
+	if len(pathSegments) >= 3 && pathSegments[0] == "orgs" {
+		return pathSegments[1], nil
+	}
+
+	return "", fmt.Errorf("organization name not found in the URL")
 }
 
 func resolveRequiredStatusChecksV4(requiredStatusChecks *github.RequiredStatusChecks) *RequiredStatusChecksV4 {
@@ -196,9 +220,9 @@ func resolveRequiredStatusChecksV4(requiredStatusChecks *github.RequiredStatusCh
 		return nil
 	}
 
-	var checks []*string
+	var checks []string
 	for _, check := range requiredStatusChecks.GetChecks() {
-		checks = append(checks, &check.Context)
+		checks = append(checks, check.Context)
 	}
 
 	return &RequiredStatusChecksV4{
@@ -224,28 +248,36 @@ func resolveRequiredPullRequestReviews(requiredPullRequestReviews *github.PullRe
 	}
 }
 
-func resolveDismissalRestrictions(dismissalRestrictions *github.DismissalRestrictions) ([]*int64, *bool) {
+func resolveDismissalRestrictions(dismissalRestrictions *github.DismissalRestrictions) ([]string, *bool) {
 	if dismissalRestrictions == nil {
 		return nil, nil
 	}
 
-	var dismissals []*int64
+	var dismissals []string
 
 	for _, user := range dismissalRestrictions.Users {
 		if user.ID != nil {
-			dismissals = append(dismissals, user.ID)
+			username := fmt.Sprintf("/%s", user.GetLogin())
+			dismissals = append(dismissals, username)
 		}
 	}
 
 	for _, team := range dismissalRestrictions.Teams {
 		if team.ID != nil {
-			dismissals = append(dismissals, team.ID)
+			orgname, err := extractOrganizationName(team.GetHTMLURL())
+			if err != nil {
+				fmt.Printf("failed to extract organization name: %v\n", err)
+			}
+
+			teamname := fmt.Sprintf("%s/%s", orgname, team.GetName())
+			dismissals = append(dismissals, teamname)
 		}
 	}
 
 	for _, app := range dismissalRestrictions.Apps {
 		if app.ID != nil {
-			dismissals = append(dismissals, app.ID)
+			appname := fmt.Sprintf("/%s", app.GetSlug())
+			dismissals = append(dismissals, appname)
 		}
 	}
 
@@ -254,30 +286,39 @@ func resolveDismissalRestrictions(dismissalRestrictions *github.DismissalRestric
 	return dismissals, &trueVal
 }
 
-func resolvePullRequestBypassers(bypassPullRequestAllowances *github.BypassPullRequestAllowances) []*int64 {
+func resolvePullRequestBypassers(bypassPullRequestAllowances *github.BypassPullRequestAllowances) []string {
 	if bypassPullRequestAllowances == nil {
 		return nil
 	}
 
-	var bypassers []*int64
+	var bypassers []string
 
 	for _, user := range bypassPullRequestAllowances.Users {
 		if user.ID != nil {
-			bypassers = append(bypassers, user.ID)
+			username := fmt.Sprintf("/%s", user.GetLogin())
+			bypassers = append(bypassers, username)
 		}
 	}
 
 	for _, team := range bypassPullRequestAllowances.Teams {
 		if team.ID != nil {
-			bypassers = append(bypassers, team.ID)
+			orgname, err := extractOrganizationName(team.GetHTMLURL())
+			if err != nil {
+				fmt.Printf("failed to extract organization name: %v\n", err)
+			}
+
+			teamname := fmt.Sprintf("%s/%s", orgname, team.GetName())
+			bypassers = append(bypassers, teamname)
 		}
 	}
 
 	for _, app := range bypassPullRequestAllowances.Apps {
 		if app.ID != nil {
-			bypassers = append(bypassers, app.ID)
+			appname := fmt.Sprintf("/%s", app.GetSlug())
+			bypassers = append(bypassers, appname)
 		}
 	}
+
 	return bypassers
 }
 
