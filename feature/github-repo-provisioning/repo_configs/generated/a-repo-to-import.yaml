@@ -56,7 +56,7 @@ branch_protections_v4:
       blocks_creations: false
       enforce_admins: false
       push_restrictions:
-        - 14854905
+        - ljubon
       require_conversation_resolution: true
       require_signed_commits: false
       required_linear_history: false
