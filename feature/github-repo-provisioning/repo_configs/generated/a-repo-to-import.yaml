@@ -57,8 +57,6 @@ branch_protections_v4:
       enforce_admins: false
       push_restrictions:
         - /ljubon
-        - gr-oss-devops/test
-        - /terraform-manager
       require_conversation_resolution: true
       require_signed_commits: false
       required_linear_history: false
@@ -68,13 +66,9 @@ branch_protections_v4:
         require_code_owner_reviews: false
         dismissal_restrictions:
             - /ljubon
-            - gr-oss-devops/test
-            - /terraform-manager
         restrict_dismissals: true
         pull_request_bypassers:
             - /ljubon
-            - gr-oss-devops/test
-            - /terraform-manager
       required_status_checks:
         strict: true
         contexts:
