@@ -33,6 +33,24 @@ import {
   id = each.key
 }
 
+locals {
+  flattened_generated_branch_protections_v4 = flatten([
+    for repo, config in local.generated_repos : [
+      for branch_protection in try(config.branch_protections_v4, []) : {
+        repository = repo
+        branch_protection = branch_protection
+      }
+    ]
+  ])
+}
+
+import {
+  for_each = local.flattened_generated_branch_protections_v4
+
+  to = module.repository[each.value.repository].github_branch_protection.branch_protection[each.value.branch_protection.pattern]
+  id = "${each.value.repository}:${each.value.branch_protection.pattern}"
+}
+
 module "repository" {
   source                  = "mineiros-io/repository/github"
   version                 = "~> 0.18.0"
