@@ -72,8 +72,9 @@ func ImportRepo(repoName string) (*Repository, error) {
 		return nil, fmt.Errorf("failed to fetch repo: %w (API Response: %s)", err, r.Status)
 	} else if 404 != r.StatusCode {
 		fmt.Printf("No pages found for this repo: %s\n", repoName)
+	} else if pages != nil {
+		file.DumpResponse("pages", repoName, pages)
 	}
-	file.DumpResponse("pages", repoName, pages)
 
 	rulesets, r, err := client.Repositories.GetAllRulesets(context.Background(), repoNameSplit[0], repoNameSplit[1], false)
 	if 404 != r.StatusCode && err != nil {
@@ -92,6 +93,13 @@ func ImportRepo(repoName string) (*Repository, error) {
 	vulnerabilityAlertsEnabled, r, err := client.Repositories.GetVulnerabilityAlerts(context.Background(), repoNameSplit[0], repoNameSplit[1])
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch vulnerability alerts: %w", err)
+	}
+
+	defaultBranchProtectionRule, r, err := client.Repositories.GetBranchProtection(context.Background(), repoNameSplit[0], repoNameSplit[1], repo.GetDefaultBranch())
+	if err != nil {
+		fmt.Printf("failed to fetch branch protection for branch %s: %w", repo.GetDefaultBranch(), err)
+	} else if defaultBranchProtectionRule != nil {
+		file.DumpResponse(repo.GetDefaultBranch()+"_branch_protection", repoName, defaultBranchProtectionRule)
 	}
 
 	return &Repository{
@@ -129,7 +137,148 @@ func ImportRepo(repoName string) (*Repository, error) {
 		Pages:                      resolvePages(pages),
 		Rulesets:                   resolveRulesets(collectedRulesets),
 		VulnerabilityAlertsEnabled: &vulnerabilityAlertsEnabled,
+		BranchProtectionsV4:        resolveBranchProtectionsV4(defaultBranchProtectionRule, repo.GetDefaultBranch()),
 	}, nil
+}
+
+func resolveBranchProtectionsV4(branchProtectionRule *github.Protection, branch string) []*BranchProtectionV4 {
+	if branchProtectionRule == nil {
+		return nil
+	}
+
+	var rules []*BranchProtectionV4
+	rules = append(rules, &BranchProtectionV4{
+		Pattern:                       branch,
+		AllowsDeletions:               &branchProtectionRule.GetAllowDeletions().Enabled,
+		AllowsForcePushes:             &branchProtectionRule.GetAllowForcePushes().Enabled,
+		BlocksCreations:               branchProtectionRule.GetBlockCreations().Enabled,
+		EnforceAdmins:                 &branchProtectionRule.GetEnforceAdmins().Enabled,
+		PushRestrictions:              resolvePushRestrictions(branchProtectionRule.GetRestrictions()),
+		RequireConversationResolution: &branchProtectionRule.GetRequiredConversationResolution().Enabled,
+		RequireSignedCommits:          branchProtectionRule.GetRequiredSignatures().Enabled,
+		RequiredLinearHistory:         &branchProtectionRule.GetRequireLinearHistory().Enabled,
+		RequiredPullRequestReviews:    resolveRequiredPullRequestReviews(branchProtectionRule.GetRequiredPullRequestReviews()),
+		RequiredStatusChecks:          resolveRequiredStatusChecksV4(branchProtectionRule.GetRequiredStatusChecks()),
+	})
+
+	return rules
+}
+
+func resolvePushRestrictions(restrictions *github.BranchRestrictions) []*int64 {
+	if restrictions == nil {
+		return nil
+	}
+
+	var pushRestrictions []*int64
+	for _, user := range restrictions.Users {
+		if user.ID != nil {
+			pushRestrictions = append(pushRestrictions, user.ID)
+		}
+	}
+
+	for _, team := range restrictions.Teams {
+		if team.ID != nil {
+			pushRestrictions = append(pushRestrictions, team.ID)
+		}
+	}
+
+	for _, app := range restrictions.Apps {
+		if app.ID != nil {
+			pushRestrictions = append(pushRestrictions, app.ID)
+		}
+	}
+
+	return pushRestrictions
+}
+
+func resolveRequiredStatusChecksV4(requiredStatusChecks *github.RequiredStatusChecks) *RequiredStatusChecksV4 {
+	if requiredStatusChecks == nil {
+		return nil
+	}
+
+	var checks []*string
+	for _, check := range requiredStatusChecks.GetChecks() {
+		checks = append(checks, &check.Context)
+	}
+
+	return &RequiredStatusChecksV4{
+		Strict:   &requiredStatusChecks.Strict,
+		Contexts: checks,
+	}
+}
+
+func resolveRequiredPullRequestReviews(requiredPullRequestReviews *github.PullRequestReviewsEnforcement) *RequiredPullRequestReviews {
+	if requiredPullRequestReviews == nil {
+		return nil
+	}
+
+	dismissalRestrictions, restrictDismissals := resolveDismissalRestrictions(requiredPullRequestReviews.GetDismissalRestrictions())
+
+	return &RequiredPullRequestReviews{
+		RequiredApprovingReviewCount: &requiredPullRequestReviews.RequiredApprovingReviewCount,
+		DismissStaleReviews:          &requiredPullRequestReviews.DismissStaleReviews,
+		RequireCodeOwnerReviews:      &requiredPullRequestReviews.RequireCodeOwnerReviews,
+		DismissalRestrictions:        dismissalRestrictions,
+		RestrictDismissals:           restrictDismissals,
+		PullRequestBypassers:         resolvePullRequestBypassers(requiredPullRequestReviews.GetBypassPullRequestAllowances()),
+	}
+}
+
+func resolveDismissalRestrictions(dismissalRestrictions *github.DismissalRestrictions) ([]*int64, *bool) {
+	if dismissalRestrictions == nil {
+		return nil, nil
+	}
+
+	var dismissals []*int64
+
+	for _, user := range dismissalRestrictions.Users {
+		if user.ID != nil {
+			dismissals = append(dismissals, user.ID)
+		}
+	}
+
+	for _, team := range dismissalRestrictions.Teams {
+		if team.ID != nil {
+			dismissals = append(dismissals, team.ID)
+		}
+	}
+
+	for _, app := range dismissalRestrictions.Apps {
+		if app.ID != nil {
+			dismissals = append(dismissals, app.ID)
+		}
+	}
+
+	var trueVal bool
+	trueVal = true
+	return dismissals, &trueVal
+}
+
+func resolvePullRequestBypassers(bypassPullRequestAllowances *github.BypassPullRequestAllowances) []*int64 {
+	if bypassPullRequestAllowances == nil {
+		return nil
+	}
+
+	var bypassers []*int64
+
+	for _, user := range bypassPullRequestAllowances.Users {
+		if user.ID != nil {
+			bypassers = append(bypassers, user.ID)
+		}
+	}
+
+	for _, team := range bypassPullRequestAllowances.Teams {
+		if team.ID != nil {
+			bypassers = append(bypassers, team.ID)
+		}
+	}
+
+	for _, app := range bypassPullRequestAllowances.Apps {
+		if app.ID != nil {
+			bypassers = append(bypassers, app.ID)
+		}
+	}
+	return bypassers
 }
 
 func resolveRulesets(githubRulesets []github.Ruleset) []Ruleset {

@@ -49,3 +49,24 @@ rulesets:
                 - ~ALL
       repository: gr-oss-devops/a-repo-to-import
 vulnerability_alerts_enabled: false
+branch_protections_v4:
+    - pattern: main
+      allows_deletions: false
+      allows_force_pushes: false
+      blocks_creations: false
+      enforce_admins: false
+      push_restrictions:
+        - 14854905
+        - 9813470
+        - 1086805
+      require_conversation_resolution: true
+      require_signed_commits: false
+      required_linear_history: false
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: false
+        require_code_owner_reviews: false
+      required_status_checks:
+        strict: true
+        contexts:
+            - context

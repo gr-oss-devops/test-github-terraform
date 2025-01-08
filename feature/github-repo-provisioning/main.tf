@@ -110,54 +110,36 @@ module "repository" {
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Branch Protections v3 Configuration
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  branch_protections_v3: (Optional list(branch_protection_v3)) Default is [].
-#    branch: (Required string)
-#    enforce_admins: (Optional bool) Default is false.
-#    require_conversation_resolution: (Optional bool) Default is false.
-#    require_signed_commits: (Optional bool) Default is false.
-#    required_status_checks: (Optional object(required_status_checks)) Default is {}.
-#      strict: (Optional bool) Default is false.
-#      contexts: (Optional list(string)) Default is [].
-#    required_pull_request_reviews: (Optional object(required_pull_request_reviews)) Default is {}.
-#      dismiss_stale_reviews: (Optional bool) Default is true.
-#      dismissal_users: (Optional list(string)) Default is [].
-#      dismissal_teams: (Optional list(string)) Default is [].
-#      require_code_owner_reviews: (Optional bool) Default is false.
-#    restrictions: (Optional object(restrictions)) Default is {}.
-#      users: (Optional list(string)) Default is [].
-#      teams: (Optional list(string)) Default is [].
-#      apps: (Optional list(string)) Default is [].
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Branch Protections v4 Configuration
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  branch_protections_v4 = try([
-#    for branch_protection in try(each.value.branch_protections_v4, []) : {
-#      pattern                         = branch_protection.pattern
-#      allows_deletions                = try(branch_protection.allows_deletions, false)
-#      allows_force_pushes             = try(branch_protection.allows_force_pushes, false)
-#      blocks_creations                = try(branch_protection.blocks_creations, false)
-#      enforce_admins                  = try(branch_protection.enforce_admins, true) TODO: not clear
-#      push_restrictions               = try(branch_protection.push_restrictions, []) TODO: not clear
-#      require_conversation_resolution = try(branch_protection.require_conversation_resolution, false)
-#      require_signed_commits          = try(branch_protection.require_signed_commits, false)
-#      required_linear_history         = try(branch_protection.required_linear_history, false)
-#
-#      required_pull_request_reviews = try({
-#        dismiss_stale_reviews          = try(branch_protection.required_pull_request_reviews.dismiss_stale_reviews, true)
-#        restrict_dismissals            = try(branch_protection.required_pull_request_reviews.restrict_dismissals, false) TODO: not clear
-#        dismissal_restrictions         = try(branch_protection.required_pull_request_reviews.dismissal_restrictions, []) TODO: not clear
-#        pull_request_bypassers         = try(branch_protection.required_pull_request_reviews.pull_request_bypassers, []) TODO: not clear
-#        require_code_owner_reviews     = try(branch_protection.required_pull_request_reviews.require_code_owner_reviews, true)
-#        required_approving_review_count = try(branch_protection.required_pull_request_reviews.required_approving_review_count, 0)
-#      }, {})
-#
-#      required_status_checks = try({
-#        strict   = try(branch_protection.required_status_checks.strict, false)
-#        contexts = try(branch_protection.required_status_checks.contexts, [])
-#      }, {})
-#    }
-#  ], [])
+  branch_protections_v4 = try([
+    for branch_protection in try(each.value.branch_protections_v4, []) : {
+      pattern                         = branch_protection.pattern
+      allows_deletions                = try(branch_protection.allows_deletions, false)
+      allows_force_pushes             = try(branch_protection.allows_force_pushes, false)
+      blocks_creations                = try(branch_protection.blocks_creations, false)
+      enforce_admins                  = try(branch_protection.enforce_admins, true)
+      push_restrictions               = try(branch_protection.push_restrictions, [])
+      require_conversation_resolution = try(branch_protection.require_conversation_resolution, false)
+      require_signed_commits          = try(branch_protection.require_signed_commits, false)
+      required_linear_history         = try(branch_protection.required_linear_history, false)
+
+      required_pull_request_reviews = try({
+        required_approving_review_count = try(branch_protection.required_pull_request_reviews.required_approving_review_count, 0)
+        dismiss_stale_reviews           = try(branch_protection.required_pull_request_reviews.dismiss_stale_reviews, true)
+        require_code_owner_reviews      = try(branch_protection.required_pull_request_reviews.require_code_owner_reviews, true)
+        restrict_dismissals             = try(branch_protection.required_pull_request_reviews.restrict_dismissals, false)
+        pull_request_bypassers          = try(branch_protection.required_pull_request_reviews.pull_request_bypassers, [])
+      }, {})
+
+      required_status_checks = try({
+        strict   = try(branch_protection.required_status_checks.strict, false)
+        contexts = try(branch_protection.required_status_checks.contexts, [])
+      }, {})
+    }
+  ], [])
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Issue Labels Configuration
