@@ -3,6 +3,11 @@ provider "github" {
   app_auth {}
 }
 
+variable "owner" {
+  description = "Org name"
+  type        = string
+}
+
 locals {
   generated_repo_configs = fileset(path.module, "repo_configs/generated/*.{yml,yaml}")
   new_repo_configs = fileset(path.module, "repo_configs/new/*.{yml,yaml}")
