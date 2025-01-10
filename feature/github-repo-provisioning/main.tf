@@ -1,4 +1,7 @@
-provider "github" {}
+provider "github" {
+  owner = var.owner
+  app_auth {}
+}
 
 locals {
   generated_repo_configs = fileset(path.module, "repo_configs/generated/*.{yml,yaml}")
