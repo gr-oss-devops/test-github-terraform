@@ -86,11 +86,11 @@ module "repository" {
   archived                = try(each.value.archived,                false)
   topics                  = try(each.value.topics,                  [])
   archive_on_destroy      = false
-  pages                   = try(contains(keys(each.value), "pages") && try(each.value.pages != null, false) ? {
-                              branch = try(each.value.pages.branch, "gh-pages")
-                              path   = try(each.value.pages.path,   "/")
-                              cname  = try(each.value.pages.cname,  null)
-                            } : null)
+#  pages                   = try(contains(keys(each.value), "pages") && try(each.value.pages != null, false) ? {
+#                              branch = try(each.value.pages.branch, "gh-pages")
+#                              path   = try(each.value.pages.path,   "/")
+#                              cname  = try(each.value.pages.cname,  null)
+#                            } : null)
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Extended Resource Configuration
