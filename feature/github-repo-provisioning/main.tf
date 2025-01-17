@@ -1,16 +1,3 @@
-terraform {
-  required_version = "~> 1.0"
-
-  # branch_protections_v3 are broken in >= 5.3
-  required_providers {
-    github = {
-      source  = "integrations/github"
-      version = ">= 4.20, < 6.0"
-    }
-  }
-}
-
-
 provider "github" {
   owner = var.owner
   app_auth {
@@ -72,8 +59,9 @@ import {
 }
 
 module "repository" {
-  source                  = "mineiros-io/repository/github"
-  version                 = "~> 0.18.0"
+#  source                  = "mineiros-io/repository/github"
+#  version                 = "~> 0.18.0"
+  source                  = "git::https://github.com/pavlovic-ivan/terraform-github-repository.git?ref=upgrade"
   for_each                = local.all_repos
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
