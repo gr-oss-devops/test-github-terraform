@@ -1,11 +1,10 @@
 provider "github" {
   owner = var.owner
-  app_auth {}
-}
-
-variable "owner" {
-  description = "Org name"
-  type        = string
+  app_auth {
+    id = var.app_id
+    installation_id = var.app_installation_id
+    pem_file = var.pem_file
+  }
 }
 
 locals {
