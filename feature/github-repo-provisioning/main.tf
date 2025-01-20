@@ -55,7 +55,7 @@ import {
   for_each = local.flattened_generated_branch_protections_v4
 
   to = module.repository[each.value.repository].github_branch_protection.branch_protection[each.value.branch_protection.pattern]
-  id = "${each.value.repository}:${each.value.branch_protection.pattern}"
+  id = format("%s:%s", each.value.repository, each.value.branch_protection.pattern)
 }
 
 module "repository" {
