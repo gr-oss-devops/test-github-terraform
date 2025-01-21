@@ -39,8 +39,6 @@ rulesets:
         update: true
       target: branch
       bypass_actors:
-        - actor_type: OrganizationAdmin
-          bypass_mode: pull_request
         - actor_id: 2
           actor_type: RepositoryRole
           bypass_mode: always

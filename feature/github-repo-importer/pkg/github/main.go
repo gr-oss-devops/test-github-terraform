@@ -491,13 +491,15 @@ func convertBypassActors(ghActors []*github.BypassActor) []BypassActor {
 	//result := make([]BypassActor, len(ghActors))
 	var result []BypassActor
 	for _, actor := range ghActors {
-		if actor.GetActorType() != "DeployKey" {
-			result = append(result, BypassActor{
-				ActorID:    int(actor.GetActorID()),
-				ActorType:  actor.GetActorType(),
-				BypassMode: actor.BypassMode,
-			})
+		if actor == nil || actor.GetActorID() == 0 {
+			continue
 		}
+
+		result = append(result, BypassActor{
+			ActorID:    int(actor.GetActorID()),
+			ActorType:  actor.GetActorType(),
+			BypassMode: actor.BypassMode,
+		})
 	}
 	return result
 }
