@@ -1,3 +1,17 @@
+terraform {
+  required_version = "~> 1.0"
+
+  # branch_protections_v3 are broken in >= 5.3
+  required_providers {
+    github = {
+      source  = "integrations/github"
+      #      version = ">= 4.20, < 6.0"
+      version = "6.5.0"
+    }
+  }
+}
+
+
 provider "github" {
   owner = var.owner
   app_auth {
@@ -8,29 +22,15 @@ provider "github" {
 }
 
 locals {
-  generated_repo_configs = fileset(path.module, "repo_configs/generated/*.{yml,yaml}")
-  new_repo_configs = fileset(path.module, "repo_configs/new/*.{yml,yaml}")
-}
-
-data "local_file" "generated_repo_file" {
-  for_each = toset(local.generated_repo_configs)
-  filename = each.value
-}
-
-data "local_file" "new_repo_file" {
-  for_each = toset(local.new_repo_configs)
-  filename = each.value
-}
-
-locals {
   generated_repos = {
-    for file_path, file_data in data.local_file.generated_repo_file :
-    split(".", basename(file_path))[0] => yamldecode(file_data.content)
+    for file_path in fileset(path.module, "repo_configs/generated/*.{yml,yaml}") :
+    split(".", basename(file_path))[0] => yamldecode(file(file_path))
   }
   new_repos = {
-    for file_path, file_data in data.local_file.new_repo_file :
-    split(".", basename(file_path))[0] => yamldecode(file_data.content)
+    for file_path in fileset(path.module, "repo_configs/new/*.{yml,yaml}") :
+    split(".", basename(file_path))[0] => yamldecode(file(file_path))
   }
+
   all_repos = merge(local.generated_repos, local.new_repos)
 }
 
