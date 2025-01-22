@@ -1,0 +1,7 @@
+clean:
+  rm -rf .terraform .terraform.lock.hcl terraform.tfstate terraform.tfstate.backup modules
+
+init:
+  mkdir modules
+  cd modules && git clone git@github.com:pavlovic-ivan/terraform-github-repository.git
+  terraform init

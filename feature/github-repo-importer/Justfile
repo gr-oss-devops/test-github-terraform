@@ -1,5 +1,3 @@
-# Justfile for Terraform to YAML conversion using yq
-
 import-repo repoName:
   #!/usr/bin/env bash
   ./importer --import {{repoName}}

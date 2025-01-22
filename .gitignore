@@ -40,6 +40,9 @@ terraform.rc
 feature/github-repo-provisioning/.terraform.lock.hcl
 feature/github-repo-provisioning/.terraform
 feature/github-repo-provisioning/.terraform/*
+feature/github-repo-provisioning/modules/terraform-github-repository/.github
+feature/github-repo-provisioning/modules/terraform-github-repository/.gitignore
+feature/github-repo-provisioning/modules/terraform-github-repository/.pre-commit-config.yaml
 
 feature/github-repo-importer/.terraform.lock.hcl
 feature/github-repo-importer/.terraform

@@ -61,7 +61,7 @@ import {
 module "repository" {
 #  source                  = "mineiros-io/repository/github"
 #  version                 = "~> 0.18.0"
-  source                  = "git::https://github.com/pavlovic-ivan/terraform-github-repository.git?ref=main"
+  source                  = "./modules/terraform-github-repository"
   for_each                = local.all_repos
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
