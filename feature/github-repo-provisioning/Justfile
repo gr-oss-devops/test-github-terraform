@@ -4,4 +4,5 @@ clean:
 init:
   mkdir modules
   cd modules && git clone git@github.com:pavlovic-ivan/terraform-github-repository.git
+  rm -rf modules/terraform-github-repository/.git modules/terraform-github-repository/.github modules/terraform-github-repository/.gitignore modules/terraform-github-repository/.pre-commit-config.yaml
   terraform init
