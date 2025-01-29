@@ -23,6 +23,10 @@ jobs:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
+      - name: Build binary
+        working-directory: feature/github-repo-importer
+        run: just build
+
       - name: Import repo
         working-directory: feature/github-repo-importer
         run: just import-repo ${{ github.event.inputs.full_repo_name_with_org }}
