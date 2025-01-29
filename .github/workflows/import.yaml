@@ -16,6 +16,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Setup Just
+        uses: extractions/setup-just@v2
+        with:
+          just-version: '1.4.0'
+
       - name: Generate a token
         uses: actions/create-github-app-token@v1
         id: generate-token
