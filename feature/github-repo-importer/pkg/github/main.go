@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/gr-oss-devops/github-repo-importer/pkg/file"
 	"net/url"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -16,12 +17,17 @@ import (
 )
 
 func getToken() (string, error) {
-	cmd := exec.Command("gh", "auth", "token")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("failed to get token: %w", err)
+	token := os.Getenv("GITHUB_TOKEN")
+
+	if token == "" {
+		cmd := exec.Command("gh", "auth", "token")
+		output, err := cmd.Output()
+		if err != nil {
+			return "", fmt.Errorf("failed to get token: %w", err)
+		}
+		token = strings.TrimSpace(string(output))
 	}
-	token := strings.TrimSpace(string(output))
+
 	if token == "" {
 		return "", errors.New("retrieved token is empty")
 	}

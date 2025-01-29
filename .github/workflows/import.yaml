@@ -1,0 +1,33 @@
+name: Import repo pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      full_repo_name_with_org:
+        description: 'The name of the repository to import with org name: format <org>/<repo>'
+        required: true
+
+jobs:
+  import-repo:
+    runs-on: ubuntu-latest
+    name: Import repo
+    environment: import
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Generate a token
+        uses: actions/create-github-app-token@v1
+        id: generate-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Import repo
+        working-directory: feature/github-repo-importer
+        run: just import-repo ${{ github.event.inputs.full_repo_name_with_org }}
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+
+      - name: Debug
+        run: git status
