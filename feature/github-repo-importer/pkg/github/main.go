@@ -71,7 +71,7 @@ func ImportRepo(repoName string) (*Repository, error) {
 
 	categorizedTeams, err := CategorizeTeams(client, repoNameSplit[0], repoNameSplit[1])
 	if err != nil {
-		_ = fmt.Errorf("failed to categorize collaborators: %w", err)
+		_ = fmt.Errorf("failed to categorize teams: %w", err)
 	}
 
 	pages, r, err := client.Repositories.GetPagesInfo(context.Background(), repoNameSplit[0], repoNameSplit[1])
