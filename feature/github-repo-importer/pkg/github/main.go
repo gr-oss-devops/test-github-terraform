@@ -99,7 +99,7 @@ func ImportRepo(repoName string) (*Repository, error) {
 
 	vulnerabilityAlertsEnabled, r, err := client.Repositories.GetVulnerabilityAlerts(context.Background(), repoNameSplit[0], repoNameSplit[1])
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch vulnerability alerts: %w", err)
+		_ = fmt.Errorf("failed to fetch vulnerability alerts: %w", err)
 	}
 
 	defaultBranchProtectionRule, r, err := client.Repositories.GetBranchProtection(context.Background(), repoNameSplit[0], repoNameSplit[1], repo.GetDefaultBranch())
