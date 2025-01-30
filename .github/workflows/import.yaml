@@ -43,13 +43,15 @@ jobs:
         id: get-user-id
         run: echo "user-id=$(gh api "/users/${{ steps.generate-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
-      - run: |
+      - name: Configure git
+        run: |  
           git config --global user.name '${{ steps.generate-token.outputs.app-slug }}[bot]'
           git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.generate-token.outputs.app-slug }}[bot]@users.noreply.github.com'
 
-      - run: |
+      - name: Push changes
+        run: |
           git checkout -b import-repo-${{ github.event.inputs.full_repo_name_with_org }}
           git push --set-upstream origin import-repo-${{ github.event.inputs.full_repo_name_with_org }}
           git add .
