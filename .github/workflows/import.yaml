@@ -51,6 +51,7 @@ jobs:
 
       - run: |
           git checkout -b import-repo-${{ github.event.inputs.full_repo_name_with_org }}
+          git push --set-upstream origin import-repo-${{ github.event.inputs.full_repo_name_with_org }}
           git add .
           git commit -m "Auto-generated changes. Import ${{ github.event.inputs.full_repo_name_with_org }} repository"
           git push
