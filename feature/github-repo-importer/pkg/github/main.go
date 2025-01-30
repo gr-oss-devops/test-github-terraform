@@ -66,12 +66,12 @@ func ImportRepo(repoName string) (*Repository, error) {
 
 	categorizedCollaborators, err := CategorizeCollaborators(client, repoNameSplit[0], repoNameSplit[1])
 	if err != nil {
-		_ = fmt.Errorf("failed to categorize collaborators: %w", err)
+		_ = fmt.Errorf("failed to categorize collaborators: %v", err)
 	}
 
 	categorizedTeams, err := CategorizeTeams(client, repoNameSplit[0], repoNameSplit[1])
 	if err != nil {
-		_ = fmt.Errorf("failed to categorize teams: %w", err)
+		fmt.Printf("failed to categorize teams: %v", err)
 	}
 
 	pages, r, err := client.Repositories.GetPagesInfo(context.Background(), repoNameSplit[0], repoNameSplit[1])
@@ -99,12 +99,12 @@ func ImportRepo(repoName string) (*Repository, error) {
 
 	vulnerabilityAlertsEnabled, r, err := client.Repositories.GetVulnerabilityAlerts(context.Background(), repoNameSplit[0], repoNameSplit[1])
 	if err != nil {
-		_ = fmt.Errorf("failed to fetch vulnerability alerts: %w", err)
+		fmt.Printf("failed to fetch vulnerability alerts: %v", err)
 	}
 
 	defaultBranchProtectionRule, r, err := client.Repositories.GetBranchProtection(context.Background(), repoNameSplit[0], repoNameSplit[1], repo.GetDefaultBranch())
 	if err != nil {
-		fmt.Printf("failed to fetch branch protection for branch %s: %w", repo.GetDefaultBranch(), err)
+		fmt.Printf("failed to fetch branch protection for branch %s: %v", repo.GetDefaultBranch(), err)
 	} else if defaultBranchProtectionRule != nil {
 		file.DumpResponse(repo.GetDefaultBranch()+"_branch_protection", repoName, defaultBranchProtectionRule)
 	}
