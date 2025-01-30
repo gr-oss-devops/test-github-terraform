@@ -7,11 +7,15 @@ on:
         description: 'The name of the repository to import with org name: format <org>/<repo>'
         required: true
 
+
 jobs:
   import-repo:
     runs-on: ubuntu-latest
     name: Import repo
     environment: import
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v2
