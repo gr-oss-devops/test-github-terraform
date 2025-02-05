@@ -16,9 +16,6 @@ topics:
     - dotnet
     - go
     - java
-pages:
-    branch: main
-    path: /
 rulesets:
     - id: 3022700
       enforcement: active
@@ -26,7 +23,18 @@ rulesets:
       rules:
         deletion: true
         non_fast_forward: true
+        required_deployments: {}
       target: branch
+      bypass_actors:
+        - actor_id: 2
+          actor_type: RepositoryRole
+          bypass_mode: always
+        - actor_id: 4
+          actor_type: RepositoryRole
+          bypass_mode: always
+        - actor_id: 5
+          actor_type: RepositoryRole
+          bypass_mode: always
       conditions:
         ref_name:
             include:
@@ -52,11 +60,11 @@ vulnerability_alerts_enabled: false
 branch_protections_v4:
     - pattern: main
       allows_deletions: false
-      allows_force_pushes: false
-      blocks_creations: true
+      allows_force_pushes: true
+      blocks_creations: false
       enforce_admins: false
       push_restrictions:
-        - /ljubon
+        - /terraform-manager
       require_conversation_resolution: true
       require_signed_commits: false
       required_linear_history: false
@@ -64,10 +72,29 @@ branch_protections_v4:
         required_approving_review_count: 1
         dismiss_stale_reviews: false
         require_code_owner_reviews: false
+        dismissal_restrictions:
+            - gr-oss-devops/test
         restrict_dismissals: true
         pull_request_bypassers:
+            - gr-oss-devops/test
             - /ljubon
+            - /terraform-manager
       required_status_checks:
         strict: true
         contexts:
             - context
+    - pattern: release
+      allows_deletions: false
+      allows_force_pushes: false
+      blocks_creations: false
+      enforce_admins: false
+      require_conversation_resolution: false
+      require_signed_commits: false
+      required_linear_history: false
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: false
+        require_code_owner_reviews: false
+        restrict_dismissals: false
+      required_status_checks:
+        strict: true

@@ -1,5 +1,9 @@
 package github
 
+import (
+	"github.com/shurcooL/githubv4"
+)
+
 type BranchProtectionV4 struct {
 	Pattern                       string                      `yaml:"pattern"`
 	AllowsDeletions               *bool                       `yaml:"allows_deletions,omitempty"`
@@ -19,12 +23,67 @@ type RequiredPullRequestReviews struct {
 	RequiredApprovingReviewCount *int     `yaml:"required_approving_review_count,omitempty"`
 	DismissStaleReviews          *bool    `yaml:"dismiss_stale_reviews,omitempty"`
 	RequireCodeOwnerReviews      *bool    `yaml:"require_code_owner_reviews,omitempty"`
-	DismissalRestrictions        []string `yaml:"dismissal_restrictions,omitempty"`
+	DismissalRestrictions        []string `yaml:"dismissal_restrictions,omitempty"` // reviewDismissalAllowances
 	RestrictDismissals           *bool    `yaml:"restrict_dismissals,omitempty"`
-	PullRequestBypassers         []string `yaml:"pull_request_bypassers,omitempty"`
+	PullRequestBypassers         []string `yaml:"pull_request_bypassers,omitempty"` // bypassPullRequestAllowances
 }
 
 type RequiredStatusChecksV4 struct {
 	Strict   *bool    `yaml:"strict,omitempty"`
 	Contexts []string `yaml:"contexts,omitempty"`
+}
+
+type BranchProtectionRulesGraphQLQuery struct {
+	Repository struct {
+		BranchProtectionRules struct {
+			Nodes []struct {
+				Pattern                        githubv4.String
+				AllowsDeletions                bool
+				AllowsForcePushes              bool
+				BlocksCreations                bool
+				IsAdminEnforced                bool
+				RequiresConversationResolution bool
+				RequiresCommitSignatures       bool
+				RequiresLinearHistory          bool
+				RequiredApprovingReviewCount   *int
+				DismissesStaleReviews          bool
+				RequiresCodeOwnerReviews       bool
+				RestrictsReviewDismissals      bool
+				RequiresStrictStatusChecks     bool
+				RequiresStatusChecks           bool
+				RequiredStatusCheckContexts    []githubv4.String
+
+				BypassPullRequestAllowances AllowanceWrapper `graphql:"bypassPullRequestAllowances(first: 100)"`
+				ReviewDismissalAllowances   AllowanceWrapper `graphql:"reviewDismissalAllowances(first: 100)"`
+				BypassForcePushAllowances   AllowanceWrapper `graphql:"bypassForcePushAllowances(first: 100)"`
+				PushAllowances              AllowanceWrapper `graphql:"pushAllowances(first: 100)"`
+			}
+		} `graphql:"branchProtectionRules(first:100)"`
+	} `graphql:"repository(owner: $owner, name: $name)"`
+}
+
+type Actor struct {
+	User UserFragment `graphql:"... on User"`
+	App  AppFragment  `graphql:"... on App"`
+	Team TeamFragment `graphql:"... on Team"`
+}
+
+type UserFragment struct {
+	Login githubv4.String
+}
+
+type AppFragment struct {
+	Slug githubv4.String
+}
+
+type TeamFragment struct {
+	CombinedSlug githubv4.String
+}
+
+type ActorWrapper struct {
+	Actor Actor
+}
+
+type AllowanceWrapper struct {
+	Nodes []ActorWrapper
 }

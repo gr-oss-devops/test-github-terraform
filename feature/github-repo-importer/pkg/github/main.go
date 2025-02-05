@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gr-oss-devops/github-repo-importer/pkg/file"
-	"net/url"
+	"github.com/shurcooL/githubv4"
 	"os"
 	"os/exec"
 	"strconv"
@@ -34,17 +34,18 @@ func getToken() (string, error) {
 	return token, nil
 }
 
-func createGitHubClient() (*github.Client, error) {
+func createGitHubClient() (*github.Client, *githubv4.Client, error) {
 	token, err := getToken()
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve token: %w", err)
+		return nil, nil, fmt.Errorf("failed to retrieve token: %w", err)
 	}
 
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
-	return client, nil
+	v4client := githubv4.NewClient(tc)
+	return client, v4client, nil
 }
 
 func ImportRepo(repoName string) (*Repository, error) {
@@ -52,7 +53,8 @@ func ImportRepo(repoName string) (*Repository, error) {
 		return nil, errors.New("invalid repository format. Use owner/repo")
 	}
 
-	client, err := createGitHubClient()
+	client, v4client, err := createGitHubClient()
+
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +111,24 @@ func ImportRepo(repoName string) (*Repository, error) {
 		file.DumpResponse(repo.GetDefaultBranch()+"_branch_protection", repoName, defaultBranchProtectionRule)
 	}
 
+	vars := map[string]interface{}{
+		"owner": githubv4.String(repoNameSplit[0]),
+		"name":  githubv4.String(repoNameSplit[1]),
+	}
+
+	var branchProtectionRulesGraphQLQuery BranchProtectionRulesGraphQLQuery
+	err = v4client.Query(context.Background(), &branchProtectionRulesGraphQLQuery, vars)
+	if err != nil {
+		fmt.Printf("Failed to fetch branch protection rules: %v\n", err)
+	}
+
+	// Marshal the query response into JSON
+	//queryJSON, err := json.MarshalIndent(branchProtectionRulesGraphQLQuery, "", "  ")
+	//if err != nil {
+	//	fmt.Printf("Error marshaling query response: %v\n", err)
+	//}
+	//fmt.Println(string(queryJSON))
+
 	return &Repository{
 		Name:                       repo.GetName(),
 		Owner:                      repo.GetOwner().GetLogin(),
@@ -144,188 +164,75 @@ func ImportRepo(repoName string) (*Repository, error) {
 		Pages:                      resolvePages(pages),
 		Rulesets:                   resolveRulesets(collectedRulesets),
 		VulnerabilityAlertsEnabled: &vulnerabilityAlertsEnabled,
-		BranchProtectionsV4:        resolveBranchProtectionsV4(defaultBranchProtectionRule, repo.GetDefaultBranch()),
+		BranchProtectionsV4:        resolveBranchProtectionsFromGraphQL(&branchProtectionRulesGraphQLQuery),
 	}, nil
 }
 
-func resolveBranchProtectionsV4(branchProtectionRule *github.Protection, branch string) []*BranchProtectionV4 {
-	if branchProtectionRule == nil {
+func resolveBranchProtectionsFromGraphQL(query *BranchProtectionRulesGraphQLQuery) []*BranchProtectionV4 {
+	if query == nil {
 		return nil
 	}
 
 	var rules []*BranchProtectionV4
-	rules = append(rules, &BranchProtectionV4{
-		Pattern:                       branch,
-		AllowsDeletions:               &branchProtectionRule.GetAllowDeletions().Enabled,
-		AllowsForcePushes:             &branchProtectionRule.GetAllowForcePushes().Enabled,
-		BlocksCreations:               branchProtectionRule.GetBlockCreations().Enabled,
-		EnforceAdmins:                 &branchProtectionRule.GetEnforceAdmins().Enabled,
-		PushRestrictions:              resolvePushRestrictions(branchProtectionRule.GetRestrictions()),
-		RequireConversationResolution: &branchProtectionRule.GetRequiredConversationResolution().Enabled,
-		RequireSignedCommits:          branchProtectionRule.GetRequiredSignatures().Enabled,
-		RequiredLinearHistory:         &branchProtectionRule.GetRequireLinearHistory().Enabled,
-		RequiredPullRequestReviews:    resolveRequiredPullRequestReviews(branchProtectionRule.GetRequiredPullRequestReviews()),
-		RequiredStatusChecks:          resolveRequiredStatusChecksV4(branchProtectionRule.GetRequiredStatusChecks()),
-	})
+
+	for _, rule := range query.Repository.BranchProtectionRules.Nodes {
+		rules = append(rules, &BranchProtectionV4{
+			Pattern:                       string(rule.Pattern),
+			AllowsDeletions:               &rule.AllowsDeletions,
+			AllowsForcePushes:             &rule.AllowsForcePushes,
+			BlocksCreations:               &rule.BlocksCreations,
+			EnforceAdmins:                 &rule.IsAdminEnforced,
+			PushRestrictions:              resolveActors(rule.PushAllowances.Nodes),
+			RequireConversationResolution: &rule.RequiresConversationResolution,
+			RequireSignedCommits:          &rule.RequiresCommitSignatures,
+			RequiredLinearHistory:         &rule.RequiresLinearHistory,
+			RequiredPullRequestReviews: &RequiredPullRequestReviews{
+				RequiredApprovingReviewCount: rule.RequiredApprovingReviewCount,
+				DismissStaleReviews:          &rule.DismissesStaleReviews,
+				RequireCodeOwnerReviews:      &rule.RequiresCodeOwnerReviews,
+				DismissalRestrictions:        resolveActors(rule.ReviewDismissalAllowances.Nodes),
+				RestrictDismissals:           &rule.RestrictsReviewDismissals,
+				PullRequestBypassers:         resolveActors(rule.BypassPullRequestAllowances.Nodes),
+			},
+			RequiredStatusChecks: &RequiredStatusChecksV4{
+				Strict:   &rule.RequiresStrictStatusChecks,
+				Contexts: resolveStatusChecksContexts(rule.RequiredStatusCheckContexts),
+			},
+		})
+	}
 
 	return rules
 }
 
-func resolvePushRestrictions(restrictions *github.BranchRestrictions) []string {
-	if restrictions == nil {
+func resolveActors(nodes []ActorWrapper) []string {
+	if nodes == nil {
 		return nil
 	}
 
-	var pushRestrictions []string
-	for _, user := range restrictions.Users {
-		if user.ID != nil {
-			username := fmt.Sprintf("/%s", user.GetLogin())
-			pushRestrictions = append(pushRestrictions, username)
+	var actors []string
+	for _, node := range nodes {
+		if string(node.Actor.User.Login) != "" {
+			actors = append(actors, fmt.Sprintf("/%s", string(node.Actor.User.Login)))
+		} else if string(node.Actor.Team.CombinedSlug) != "" {
+			actors = append(actors, string(node.Actor.Team.CombinedSlug))
+		} else if string(node.Actor.App.Slug) != "" {
+			actors = append(actors, fmt.Sprintf("/%s", string(node.Actor.App.Slug)))
 		}
 	}
-
-	for _, team := range restrictions.Teams {
-		if team.ID != nil {
-			orgname, err := extractOrganizationName(team.GetHTMLURL())
-			if err != nil {
-				fmt.Printf("failed to extract organization name: %v\n", err)
-			}
-
-			teamname := fmt.Sprintf("%s/%s", orgname, team.GetName())
-			pushRestrictions = append(pushRestrictions, teamname)
-		}
-	}
-
-	for _, app := range restrictions.Apps {
-		if app.ID != nil {
-			appname := fmt.Sprintf("/%s", app.GetSlug())
-			pushRestrictions = append(pushRestrictions, appname)
-		}
-	}
-
-	return pushRestrictions
+	return actors
 }
 
-func extractOrganizationName(githubURL string) (string, error) {
-	parsedURL, err := url.Parse(githubURL)
-	if err != nil {
-		return "", fmt.Errorf("invalid URL: %w", err)
-	}
-
-	pathSegments := strings.Split(strings.Trim(parsedURL.Path, "/"), "/")
-
-	if len(pathSegments) >= 3 && pathSegments[0] == "orgs" {
-		return pathSegments[1], nil
-	}
-
-	return "", fmt.Errorf("organization name not found in the URL")
-}
-
-func resolveRequiredStatusChecksV4(requiredStatusChecks *github.RequiredStatusChecks) *RequiredStatusChecksV4 {
-	if requiredStatusChecks == nil {
+func resolveStatusChecksContexts(contexts []githubv4.String) []string {
+	if contexts == nil {
 		return nil
 	}
 
-	var checks []string
-	for _, check := range requiredStatusChecks.GetChecks() {
-		checks = append(checks, check.Context)
+	var ctx []string
+	for _, statusCheckContext := range contexts {
+		ctx = append(ctx, string(statusCheckContext))
 	}
 
-	return &RequiredStatusChecksV4{
-		Strict:   &requiredStatusChecks.Strict,
-		Contexts: checks,
-	}
-}
-
-func resolveRequiredPullRequestReviews(requiredPullRequestReviews *github.PullRequestReviewsEnforcement) *RequiredPullRequestReviews {
-	if requiredPullRequestReviews == nil {
-		return nil
-	}
-
-	dismissalRestrictions, restrictDismissals := resolveDismissalRestrictions(requiredPullRequestReviews.GetDismissalRestrictions())
-
-	return &RequiredPullRequestReviews{
-		RequiredApprovingReviewCount: &requiredPullRequestReviews.RequiredApprovingReviewCount,
-		DismissStaleReviews:          &requiredPullRequestReviews.DismissStaleReviews,
-		RequireCodeOwnerReviews:      &requiredPullRequestReviews.RequireCodeOwnerReviews,
-		DismissalRestrictions:        dismissalRestrictions,
-		RestrictDismissals:           restrictDismissals,
-		PullRequestBypassers:         resolvePullRequestBypassers(requiredPullRequestReviews.GetBypassPullRequestAllowances()),
-	}
-}
-
-func resolveDismissalRestrictions(dismissalRestrictions *github.DismissalRestrictions) ([]string, *bool) {
-	if dismissalRestrictions == nil {
-		return nil, nil
-	}
-
-	var dismissals []string
-
-	for _, user := range dismissalRestrictions.Users {
-		if user.ID != nil {
-			username := fmt.Sprintf("/%s", user.GetLogin())
-			dismissals = append(dismissals, username)
-		}
-	}
-
-	for _, team := range dismissalRestrictions.Teams {
-		if team.ID != nil {
-			orgname, err := extractOrganizationName(team.GetHTMLURL())
-			if err != nil {
-				fmt.Printf("failed to extract organization name: %v\n", err)
-			}
-
-			teamname := fmt.Sprintf("%s/%s", orgname, team.GetName())
-			dismissals = append(dismissals, teamname)
-		}
-	}
-
-	for _, app := range dismissalRestrictions.Apps {
-		if app.ID != nil {
-			appname := fmt.Sprintf("/%s", app.GetSlug())
-			dismissals = append(dismissals, appname)
-		}
-	}
-
-	var trueVal bool
-	trueVal = true
-	return dismissals, &trueVal
-}
-
-func resolvePullRequestBypassers(bypassPullRequestAllowances *github.BypassPullRequestAllowances) []string {
-	if bypassPullRequestAllowances == nil {
-		return nil
-	}
-
-	var bypassers []string
-
-	for _, user := range bypassPullRequestAllowances.Users {
-		if user.ID != nil {
-			username := fmt.Sprintf("/%s", user.GetLogin())
-			bypassers = append(bypassers, username)
-		}
-	}
-
-	for _, team := range bypassPullRequestAllowances.Teams {
-		if team.ID != nil {
-			orgname, err := extractOrganizationName(team.GetHTMLURL())
-			if err != nil {
-				fmt.Printf("failed to extract organization name: %v\n", err)
-			}
-
-			teamname := fmt.Sprintf("%s/%s", orgname, team.GetName())
-			bypassers = append(bypassers, teamname)
-		}
-	}
-
-	for _, app := range bypassPullRequestAllowances.Apps {
-		if app.ID != nil {
-			appname := fmt.Sprintf("/%s", app.GetSlug())
-			bypassers = append(bypassers, appname)
-		}
-	}
-
-	return bypassers
+	return ctx
 }
 
 func resolveRulesets(githubRulesets []github.Ruleset) []Ruleset {
