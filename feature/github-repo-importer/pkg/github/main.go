@@ -216,7 +216,7 @@ func resolveActors(nodes []ActorWrapper) []string {
 		} else if string(node.Actor.Team.CombinedSlug) != "" {
 			actors = append(actors, string(node.Actor.Team.CombinedSlug))
 		} else if string(node.Actor.App.Slug) != "" {
-			actors = append(actors, fmt.Sprintf("/%s", string(node.Actor.App.Slug)))
+			actors = append(actors, string(node.Actor.App.Slug))
 		}
 	}
 	return actors
