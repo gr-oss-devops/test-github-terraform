@@ -63,7 +63,7 @@ branch_protections_v4:
       blocks_creations: false
       enforce_admins: false
       push_restrictions:
-        - terraform-manager
+        - A_kwHOCWve9s4AEJVV
       require_conversation_resolution: true
       require_signed_commits: false
       required_linear_history: false
@@ -77,7 +77,7 @@ branch_protections_v4:
         pull_request_bypassers:
             - gr-oss-devops/test
             - /ljubon
-            - terraform-manager
+            - A_kwHOCWve9s4AEJVV
       required_status_checks:
         strict: true
         contexts:
