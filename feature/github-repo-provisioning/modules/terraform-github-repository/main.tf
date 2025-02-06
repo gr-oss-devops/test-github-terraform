@@ -203,7 +203,7 @@ resource "github_branch_protection" "branch_protection" {
   allows_deletions                = try(var.branch_protections_v4[each.value].allows_deletions, false)
   allows_force_pushes             = try(var.branch_protections_v4[each.value].allows_force_pushes, false)
   enforce_admins                  = try(var.branch_protections_v4[each.value].enforce_admins, true)
-#  push_restrictions               = try(var.branch_protections_v4[each.value].push_restrictions, []) this is now renamed to push allowances
+  push_restrictions               = try(var.branch_protections_v4[each.value].push_restrictions, [])
   require_conversation_resolution = try(var.branch_protections_v4[each.value].require_conversation_resolution, false)
   require_signed_commits          = try(var.branch_protections_v4[each.value].require_signed_commits, false)
   required_linear_history         = try(var.branch_protections_v4[each.value].required_linear_history, false)

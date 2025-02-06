@@ -59,10 +59,12 @@ vulnerability_alerts_enabled: false
 branch_protections_v4:
     - pattern: main
       allows_deletions: false
-      allows_force_pushes: true
+      allows_force_pushes: false
       blocks_creations: false
       enforce_admins: false
       push_restrictions:
+        - /ljubon
+        - gr-oss-devops/test
         - A_kwHOCWve9s4AEJVV
       require_conversation_resolution: true
       require_signed_commits: false
@@ -73,6 +75,8 @@ branch_protections_v4:
         require_code_owner_reviews: false
         dismissal_restrictions:
             - gr-oss-devops/test
+            - /ljubon
+            - A_kwHOCWve9s4AEJVV
         restrict_dismissals: true
         pull_request_bypassers:
             - gr-oss-devops/test
