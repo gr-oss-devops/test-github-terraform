@@ -62,10 +62,6 @@ branch_protections_v4:
       allows_force_pushes: false
       blocks_creations: false
       enforce_admins: false
-      push_restrictions:
-        - /ljubon
-        - gr-oss-devops/test
-        - A_kwHOCWve9s4AEJVV
       require_conversation_resolution: true
       require_signed_commits: false
       required_linear_history: false
@@ -73,14 +69,9 @@ branch_protections_v4:
         required_approving_review_count: 1
         dismiss_stale_reviews: false
         require_code_owner_reviews: false
-        dismissal_restrictions:
-            - gr-oss-devops/test
-            - /ljubon
-            - A_kwHOCWve9s4AEJVV
         restrict_dismissals: true
         pull_request_bypassers:
             - gr-oss-devops/test
-            - /ljubon
             - A_kwHOCWve9s4AEJVV
       required_status_checks:
         strict: true
