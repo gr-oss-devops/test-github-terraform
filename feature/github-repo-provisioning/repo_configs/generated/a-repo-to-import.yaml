@@ -23,6 +23,11 @@ rulesets:
       rules:
         deletion: true
         non_fast_forward: true
+        required_status_checks:
+            required_check:
+                - context: context
+                  integration_id: 15368
+            strict_required_status_checks_policy: false
       target: branch
       bypass_actors:
         - actor_id: 2
@@ -59,9 +64,13 @@ vulnerability_alerts_enabled: false
 branch_protections_v4:
     - pattern: main
       allows_deletions: false
-      allows_force_pushes: false
-      blocks_creations: false
+      allows_force_pushes: true
+      blocks_creations: true
       enforce_admins: false
+      push_restrictions:
+        - /ljubon
+        - gr-oss-devops/test
+        - app/terraform-manager
       require_conversation_resolution: true
       require_signed_commits: false
       required_linear_history: false
@@ -69,26 +78,17 @@ branch_protections_v4:
         required_approving_review_count: 1
         dismiss_stale_reviews: false
         require_code_owner_reviews: false
+        dismissal_restrictions:
+            - gr-oss-devops/test
+            - /ljubon
+            - app/terraform-manager
         restrict_dismissals: true
         pull_request_bypassers:
             - gr-oss-devops/test
-            - A_kwHOCWve9s4AEJVV
+            - /ljubon
+            - app/terraform-manager
       required_status_checks:
         strict: true
         contexts:
             - context
-    - pattern: release
-      allows_deletions: false
-      allows_force_pushes: false
-      blocks_creations: false
-      enforce_admins: false
-      require_conversation_resolution: false
-      require_signed_commits: false
-      required_linear_history: false
-      required_pull_request_reviews:
-        required_approving_review_count: 1
-        dismiss_stale_reviews: false
-        require_code_owner_reviews: false
-        restrict_dismissals: false
-      required_status_checks:
-        strict: true
+      restricts_pushes: true

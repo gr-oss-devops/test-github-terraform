@@ -122,12 +122,12 @@ func ImportRepo(repoName string) (*Repository, error) {
 		fmt.Printf("Failed to fetch branch protection rules: %v\n", err)
 	}
 
-	// Marshal the query response into JSON
-	//queryJSON, err := json.MarshalIndent(branchProtectionRulesGraphQLQuery, "", "  ")
-	//if err != nil {
-	//	fmt.Printf("Error marshaling query response: %v\n", err)
-	//}
-	//fmt.Println(string(queryJSON))
+	//Marshal the query response into JSON
+	queryJSON, err := json.MarshalIndent(branchProtectionRulesGraphQLQuery, "", "  ")
+	if err != nil {
+		fmt.Printf("Error marshaling query response: %v\n", err)
+	}
+	fmt.Println(string(queryJSON))
 
 	return &Repository{
 		Name:                       repo.GetName(),
@@ -180,12 +180,14 @@ func resolveBranchProtectionsFromGraphQL(query *BranchProtectionRulesGraphQLQuer
 			Pattern:                       string(rule.Pattern),
 			AllowsDeletions:               &rule.AllowsDeletions,
 			AllowsForcePushes:             &rule.AllowsForcePushes,
+			ForcePushAllowances:           resolveActors(rule.BypassForcePushAllowances.Nodes),
 			BlocksCreations:               &rule.BlocksCreations,
 			EnforceAdmins:                 &rule.IsAdminEnforced,
 			PushRestrictions:              resolveActors(rule.PushAllowances.Nodes),
 			RequireConversationResolution: &rule.RequiresConversationResolution,
 			RequireSignedCommits:          &rule.RequiresCommitSignatures,
 			RequiredLinearHistory:         &rule.RequiresLinearHistory,
+			RestrictsPushes:               &rule.RestrictsPushes,
 			RequiredPullRequestReviews: &RequiredPullRequestReviews{
 				RequiredApprovingReviewCount: rule.RequiredApprovingReviewCount,
 				DismissStaleReviews:          &rule.DismissesStaleReviews,
@@ -211,12 +213,13 @@ func resolveActors(nodes []ActorWrapper) []string {
 
 	var actors []string
 	for _, node := range nodes {
-		if string(node.Actor.User.Login) != "" {
-			actors = append(actors, fmt.Sprintf("/%s", string(node.Actor.User.Login)))
-		} else if string(node.Actor.Team.CombinedSlug) != "" {
-			actors = append(actors, string(node.Actor.Team.CombinedSlug))
-		} else if string(node.Actor.App.Slug) != "" {
-			actors = append(actors, fmt.Sprintf("/%s", string(node.Actor.App.Slug)))
+		switch {
+		case node.Actor.User.Name != "":
+			actors = append(actors, "/"+string(node.Actor.User.Name))
+		case node.Actor.Team.Name != "":
+			actors = append(actors, string(node.Actor.Team.Name))
+		case node.Actor.App.Name != "":
+			actors = append(actors, "app/"+string(node.Actor.App.Name))
 		}
 	}
 	return actors

@@ -196,30 +196,12 @@ resource "github_branch_protection" "branch_protection" {
     github_branch.branch,
   ]
 
-  repository_id = github_repository.repository.node_id
-
-  pattern = var.branch_protections_v4[each.value].pattern
-
-  allows_deletions                = try(var.branch_protections_v4[each.value].allows_deletions, false)
-  allows_force_pushes             = try(var.branch_protections_v4[each.value].allows_force_pushes, false)
-  enforce_admins                  = try(var.branch_protections_v4[each.value].enforce_admins, true)
-#  push_restrictions               = try(var.branch_protections_v4[each.value].push_restrictions, [])
-  require_conversation_resolution = try(var.branch_protections_v4[each.value].require_conversation_resolution, false)
+  repository_id                   = github_repository.repository.node_id
+  pattern                         = var.branch_protections_v4[each.value].pattern
+  enforce_admins                  = try(var.branch_protections_v4[each.value].enforce_admins, false)
   require_signed_commits          = try(var.branch_protections_v4[each.value].require_signed_commits, false)
   required_linear_history         = try(var.branch_protections_v4[each.value].required_linear_history, false)
-
-  dynamic "required_pull_request_reviews" {
-    for_each = try([var.branch_protections_v4[each.value].required_pull_request_reviews], [])
-
-    content {
-      dismiss_stale_reviews           = try(required_pull_request_reviews.value.dismiss_stale_reviews, true)
-      restrict_dismissals             = try(required_pull_request_reviews.value.restrict_dismissals, null)
-      dismissal_restrictions          = try(required_pull_request_reviews.value.dismissal_restrictions, [])
-      pull_request_bypassers          = try(required_pull_request_reviews.value.pull_request_bypassers, [])
-      require_code_owner_reviews      = try(required_pull_request_reviews.value.require_code_owner_reviews, true)
-      required_approving_review_count = try(required_pull_request_reviews.value.required_approving_review_count, 0)
-    }
-  }
+  require_conversation_resolution = try(var.branch_protections_v4[each.value].require_conversation_resolution, false)
 
   dynamic "required_status_checks" {
     for_each = try([var.branch_protections_v4[each.value].required_status_checks], [])
@@ -230,13 +212,32 @@ resource "github_branch_protection" "branch_protection" {
     }
   }
 
-  dynamic "restrict_pushes" {
-    for_each = try([each.value], {})
+  dynamic "required_pull_request_reviews" {
+    for_each = try([var.branch_protections_v4[each.value].required_pull_request_reviews], [])
+
     content {
-      blocks_creations  = try(restrict_pushes.blocks_creations, false)
-      push_allowances   = try(restrict_pushes.push_restrictions, [])
+      dismiss_stale_reviews           = try(required_pull_request_reviews.value.dismiss_stale_reviews, false)
+      restrict_dismissals             = try(required_pull_request_reviews.value.restrict_dismissals, null)
+      dismissal_restrictions          = try(required_pull_request_reviews.value.dismissal_restrictions, [])
+      pull_request_bypassers          = try(required_pull_request_reviews.value.pull_request_bypassers, [])
+      require_code_owner_reviews      = try(required_pull_request_reviews.value.require_code_owner_reviews, false)
+      required_approving_review_count = try(required_pull_request_reviews.value.required_approving_review_count, null)
+      require_last_push_approval      = try(required_pull_request_reviews.value.require_last_push_approval, false)
     }
   }
+
+  dynamic "restrict_pushes" {
+    for_each = try([var.branch_protections_v4[each.value]], [])
+    content {
+      blocks_creations  = try(var.branch_protections_v4[each.value].blocks_creations, true)
+      push_allowances   = try(var.branch_protections_v4[each.value].push_restrictions, [])
+    }
+  }
+
+  force_push_bypassers  = try(var.branch_protections_v4[each.value].force_push_bypassers, [])
+  allows_force_pushes   = try(var.branch_protections_v4[each.value].allows_force_pushes, null)
+  allows_deletions      = try(var.branch_protections_v4[each.value].allows_deletions, null)
+  lock_branch           = try(var.branch_protections_v4[each.value].lock_branch, null)
 }
 
 # ---------------------------------------------------------------------------------------------------------------------

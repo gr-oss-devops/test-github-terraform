@@ -4,9 +4,10 @@ terraform {
   # branch_protections_v3 are broken in >= 5.3
   required_providers {
     github = {
-      source  = "integrations/github"
+#      source  = "integrations/github"
+      source = "app.terraform.io/GR-OSS/github"
       #      version = ">= 4.20, < 6.0"
-      version = "6.5.0"
+      version = "6.5.1"
     }
   }
 }
@@ -40,6 +41,12 @@ import {
   id = each.key
 }
 
+import {
+  for_each = local.generated_repos
+  to = module.repository[each.key].github_branch_default.default[0]
+  id = each.key
+}
+
 locals {
   flattened_generated_branch_protections_v4 = flatten([
     for repo, config in local.generated_repos : [
@@ -58,9 +65,24 @@ import {
   id = format("%s:%s", each.value.repository, each.value.branch_protection.pattern)
 }
 
+locals {
+  flat_restrictions = distinct(flatten(
+    concat(
+      try([for p in local.flattened_generated_branch_protections_v4 : p.branch_protection.push_restrictions], []),
+      try([for p in local.flattened_generated_branch_protections_v4 : p.branch_protection.required_pull_request_reviews.dismissal_restrictions], []),
+      try([for p in local.flattened_generated_branch_protections_v4 : p.branch_protection.required_pull_request_reviews.pull_request_bypassers], []),
+      try([for p in local.flattened_generated_branch_protections_v4 : p.branch_protection.force_push_bypassers], [])
+    )
+  ))
+  app_actors = [for actor in local.flat_restrictions : actor if startswith(actor, "app/")]
+}
+
+data "github_app" app {
+  for_each = toset(local.app_actors)
+  slug = split("/", each.value)[1]
+}
+
 module "repository" {
-#  source                  = "mineiros-io/repository/github"
-#  version                 = "~> 0.18.0"
   source                  = "./modules/terraform-github-repository"
   for_each                = local.all_repos
 
@@ -86,11 +108,11 @@ module "repository" {
   archived                = try(each.value.archived,                false)
   topics                  = try(each.value.topics,                  [])
   archive_on_destroy      = false
-#  pages                   = try(contains(keys(each.value), "pages") && try(each.value.pages != null, false) ? {
-#                              branch = try(each.value.pages.branch, "gh-pages")
-#                              path   = try(each.value.pages.path,   "/")
-#                              cname  = try(each.value.pages.cname,  null)
-#                            } : null)
+  pages                   = try(contains(keys(each.value), "pages") && try(each.value.pages != null, false) ? {
+                              branch = try(each.value.pages.branch, "gh-pages")
+                              path   = try(each.value.pages.path,   "/")
+                              cname  = try(each.value.pages.cname,  null)
+                            } : null)
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # Extended Resource Configuration
@@ -145,9 +167,10 @@ module "repository" {
       pattern                         = branch_protection.pattern
       allows_deletions                = try(branch_protection.allows_deletions, false)
       allows_force_pushes             = try(branch_protection.allows_force_pushes, false)
+      force_push_bypassers            = try([for bypasser in branch_protection.force_push_bypassers : (!startswith(bypasser, "app/") ? bypasser : data.github_app.app[bypasser].node_id)], [])
       blocks_creations                = try(branch_protection.blocks_creations, false)
       enforce_admins                  = try(branch_protection.enforce_admins, true)
-      push_restrictions               = try(branch_protection.push_restrictions, [])
+      push_restrictions               = try([for bypasser in branch_protection.push_restrictions : (!startswith(bypasser, "app/") ? bypasser : data.github_app.app[bypasser].node_id)], [])
       require_conversation_resolution = try(branch_protection.require_conversation_resolution, false)
       require_signed_commits          = try(branch_protection.require_signed_commits, false)
       required_linear_history         = try(branch_protection.required_linear_history, false)
@@ -157,7 +180,8 @@ module "repository" {
         dismiss_stale_reviews           = try(branch_protection.required_pull_request_reviews.dismiss_stale_reviews, true)
         require_code_owner_reviews      = try(branch_protection.required_pull_request_reviews.require_code_owner_reviews, true)
         restrict_dismissals             = try(branch_protection.required_pull_request_reviews.restrict_dismissals, false)
-        pull_request_bypassers          = try(branch_protection.required_pull_request_reviews.pull_request_bypassers, [])
+        pull_request_bypassers          = try([for bypasser in branch_protection.required_pull_request_reviews.pull_request_bypassers : (!startswith(bypasser, "app/") ? bypasser : data.github_app.app[bypasser].node_id)], [])
+        dismissal_restrictions          = try([for bypasser in branch_protection.required_pull_request_reviews.dismissal_restrictions : (!startswith(bypasser, "app/") ? bypasser : data.github_app.app[bypasser].node_id)], [])
       }, {})
 
       required_status_checks = try({
@@ -231,7 +255,7 @@ locals {
 import {
   for_each = local.generated_rulesets_map
   to = github_repository_ruleset.ruleset[each.key]
-  id = "${each.value.repository}:${each.value.ruleset.id}"
+  id = format("%s:%s", each.value.repository, each.value.ruleset.id)
 }
 
 resource "github_repository_ruleset" "ruleset" {
@@ -253,12 +277,12 @@ resource "github_repository_ruleset" "ruleset" {
   }
 
   rules {
-    creation = try(each.value.ruleset.rules.creation, null)
-    update   = try(each.value.ruleset.rules.update, null)
-    deletion = try(each.value.ruleset.rules.deletion, null)
-    required_linear_history = try(each.value.ruleset.rules.required_linear_history, null)
-    required_signatures    = try(each.value.ruleset.rules.required_signatures, null)
-    non_fast_forward      = try(each.value.ruleset.rules.non_fast_forward, null)
+    creation                      = try(each.value.ruleset.rules.creation, null)
+    update                        = try(each.value.ruleset.rules.update, null)
+    deletion                      = try(each.value.ruleset.rules.deletion, null)
+    required_linear_history       = try(each.value.ruleset.rules.required_linear_history, null)
+    required_signatures           = try(each.value.ruleset.rules.required_signatures, null)
+    non_fast_forward              = try(each.value.ruleset.rules.non_fast_forward, null)
 
     dynamic "branch_name_pattern" {
       for_each = try(each.value.ruleset.rules.branch_name_pattern, null) != null ? [each.value.ruleset.rules.branch_name_pattern] : []
@@ -360,7 +384,6 @@ resource "github_repository_ruleset" "ruleset" {
         }
       }
     }
-
   }
 
   dynamic "bypass_actors" {

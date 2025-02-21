@@ -8,6 +8,7 @@ type BranchProtectionV4 struct {
 	Pattern                       string                      `yaml:"pattern"`
 	AllowsDeletions               *bool                       `yaml:"allows_deletions,omitempty"`
 	AllowsForcePushes             *bool                       `yaml:"allows_force_pushes,omitempty"`
+	ForcePushAllowances           []string                    `yaml:"force_push_bypassers,omitempty"`
 	AllowsCreations               *bool                       `yaml:"allows_creations,omitempty"`
 	BlocksCreations               *bool                       `yaml:"blocks_creations,omitempty"`
 	EnforceAdmins                 *bool                       `yaml:"enforce_admins,omitempty"`
@@ -17,6 +18,7 @@ type BranchProtectionV4 struct {
 	RequiredLinearHistory         *bool                       `yaml:"required_linear_history,omitempty"`
 	RequiredPullRequestReviews    *RequiredPullRequestReviews `yaml:"required_pull_request_reviews,omitempty"`
 	RequiredStatusChecks          *RequiredStatusChecksV4     `yaml:"required_status_checks,omitempty"`
+	RestrictsPushes               *bool                       `yaml:"restricts_pushes,omitempty"`
 }
 
 type RequiredPullRequestReviews struct {
@@ -51,12 +53,12 @@ type BranchProtectionRulesGraphQLQuery struct {
 				RestrictsReviewDismissals      bool
 				RequiresStrictStatusChecks     bool
 				RequiresStatusChecks           bool
+				RestrictsPushes                bool
 				RequiredStatusCheckContexts    []githubv4.String
-
-				BypassPullRequestAllowances AllowanceWrapper `graphql:"bypassPullRequestAllowances(first: 100)"`
-				ReviewDismissalAllowances   AllowanceWrapper `graphql:"reviewDismissalAllowances(first: 100)"`
-				BypassForcePushAllowances   AllowanceWrapper `graphql:"bypassForcePushAllowances(first: 100)"`
-				PushAllowances              AllowanceWrapper `graphql:"pushAllowances(first: 100)"`
+				BypassPullRequestAllowances    AllowanceWrapper `graphql:"bypassPullRequestAllowances(first: 100)"`
+				ReviewDismissalAllowances      AllowanceWrapper `graphql:"reviewDismissalAllowances(first: 100)"`
+				BypassForcePushAllowances      AllowanceWrapper `graphql:"bypassForcePushAllowances(first: 100)"`
+				PushAllowances                 AllowanceWrapper `graphql:"pushAllowances(first: 100)"`
 			}
 		} `graphql:"branchProtectionRules(first:100)"`
 	} `graphql:"repository(owner: $owner, name: $name)"`
@@ -69,15 +71,15 @@ type Actor struct {
 }
 
 type UserFragment struct {
-	Login githubv4.String
+	Name githubv4.String `graphql:"login"`
 }
 
 type AppFragment struct {
-	Slug githubv4.String
+	Name githubv4.String `graphql:"slug"`
 }
 
 type TeamFragment struct {
-	CombinedSlug githubv4.String
+	Name githubv4.String `graphql:"combinedSlug"`
 }
 
 type ActorWrapper struct {
