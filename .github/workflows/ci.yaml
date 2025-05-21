@@ -1,0 +1,17 @@
+name: Import repo pipeline
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [dev]
+
+jobs:
+  import-repo:
+    runs-on: ubuntu-latest
+    name: PoC
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Debug
+        run: echo "hello"
